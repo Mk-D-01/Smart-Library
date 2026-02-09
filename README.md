@@ -8,3 +8,5 @@ Each student scans their ID card while entering or leaving the library 🪪➡�
 The Smart Library eliminates manual registers ✍️❌, prevents overcrowding 🚫👥, and ensures optimal space utilization. It improves the overall student experience while helping library staff manage resources more efficiently 🎯. Designed to be scalable, cost-effective, and reliable, this project supports the vision of smart campuses and digital education 🌐🏫.
 
 Overall, the Smart Library project represents a step toward a smarter, faster, and more connected learning environment 💡📖
+
+My name is gaurang And I am leaning github...
