@@ -1,5 +1,7 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { initializeDatabase, closeDatabase } from './config/database';
 import libraryRoutes from './routes/library.routes';
@@ -12,7 +14,9 @@ const app: Application = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
+app.use(helmet());
 app.use(cors()); // Enable CORS for Flutter app
+app.use(morgan('combined'));
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
@@ -28,15 +32,30 @@ app.get('/', (_req: Request, res: Response) => {
     endpoints: {
       books: '/api/books',
       members: '/api/members',
+      health: '/api/health'
     },
   });
 });
 
-app.get('/health', (_req: Request, res: Response) => {
+app.get('/api', (_req: Request, res: Response) => {
+  res.json({
+    message: 'Smart Library API',
+    endpoints: [
+      'GET /',
+      'GET /api',
+      'GET /api/health',
+      'GET /api/books',
+      'GET /api/members'
+    ]
+  });
+});
+
+app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
     success: true,
     status: 'healthy',
     timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   });
 });
 
@@ -54,6 +73,8 @@ const server = app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
   console.log(`📚 Library Management System API`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📖 API Documentation: http://localhost:${PORT}/api`);
+  console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
 });
 
 // Graceful shutdown
