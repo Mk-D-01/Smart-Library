@@ -1,46 +1,49 @@
 {
   "name": "smart-library-backend",
   "version": "1.0.0",
-  "description": "Backend for Smart Library Management System",
+  "description": "Library Management System Backend API",
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon --watch src --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test": "jest"
+    "test": "jest",
+    "type-check": "tsc --noEmit"
   },
+  "keywords": [
+    "library",
+    "management",
+    "api",
+    "express",
+    "typescript",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "helmet": "^7.0.0",
     "morgan": "^1.10.0",
     "dotenv": "^16.3.1",
-    "sqlite3": "^5.1.6",
+    "better-sqlite3": "^9.2.2",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "express-validator": "^7.0.1"
   },
   "devDependencies": {
-    "@types/express": "^4.17.17",
-    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
     "@types/morgan": "^1.9.4",
     "@types/helmet": "^4.0.0",
     "@types/bcryptjs": "^2.4.2",
     "@types/jsonwebtoken": "^9.0.2",
-    "@types/node": "^20.4.5",
-    "typescript": "^5.1.6",
-    "ts-node": "^10.9.1",
-    "nodemon": "^3.0.1",
+    "@types/node": "^20.10.6",
+    "@types/better-sqlite3": "^7.6.13",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2",
+    "nodemon": "^3.0.2",
     "jest": "^29.6.1",
     "@types/jest": "^29.5.3"
-  },
-  "keywords": [
-    "library",
-    "management",
-    "nodejs",
-    "typescript",
-    "express"
-  ],
-  "author": "",
-  "license": "ISC"
+  }
 }
