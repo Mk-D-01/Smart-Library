@@ -2,13 +2,10 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.fresh
+    image: smart-library-backend:latest
     ports:
       - "3000:3000"
-    volumes:
-      - ./backend/src:/app/src
-      - ./backend/database:/app/database
-      - /app/node_modules
     environment:
       - NODE_ENV=development
       - PORT=3000

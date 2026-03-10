@@ -10,7 +10,7 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy all source code
+# Copy source code (this will overwrite any cached files)
 COPY . .
 
 # Expose port 3000
