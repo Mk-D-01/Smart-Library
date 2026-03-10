@@ -1,185 +1,146 @@
-import db from '../config/database';
+import db, { initializeDatabase as initDB } from '../config/database';
+import { Student, ScanLog, LibraryConfig, LibraryStatus } from '../types/library.types';
 
-export interface Book {
-  id?: number;
-  title: string;
-  author: string;
-  isbn?: string;
-  category?: string;
-  published_year?: number;
-  available_copies?: number;
-  total_copies?: number;
-  created_at?: string;
-  updated_at?: string;
-}
+export { initDB as initializeDatabase };
 
-export interface Member {
-  id?: number;
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  membership_date?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface Transaction {
-  id?: number;
-  book_id: number;
-  member_id: number;
-  transaction_type: 'borrow' | 'return';
-  transaction_date?: string;
-  due_date?: string;
-  return_date?: string;
-  fine_amount?: number;
-  status?: 'active' | 'completed' | 'overdue';
-  created_at?: string;
-}
-
-// Book Model Methods
-export const BookModel = {
-  getAll: (): Book[] => {
-    const stmt = db.prepare('SELECT * FROM books ORDER BY created_at DESC');
-    return stmt.all() as Book[];
-  },
-
-  getById: (id: number): Book | undefined => {
-    const stmt = db.prepare('SELECT * FROM books WHERE id = ?');
-    return stmt.get(id) as Book | undefined;
-  },
-
-  create: (book: Omit<Book, 'id' | 'created_at' | 'updated_at'>): Book => {
-    const stmt = db.prepare(`
-      INSERT INTO books (title, author, isbn, category, published_year, available_copies, total_copies)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-    const result = stmt.run(
-      book.title,
-      book.author,
-      book.isbn || null,
-      book.category || null,
-      book.published_year || null,
-      book.available_copies || 1,
-      book.total_copies || 1
-    );
-    return BookModel.getById(result.lastInsertRowid as number) as Book;
-  },
-
-  update: (id: number, book: Partial<Book>): Book | undefined => {
-    const updates: string[] = [];
-    const values: any[] = [];
-
-    if (book.title !== undefined) {
-      updates.push('title = ?');
-      values.push(book.title);
-    }
-    if (book.author !== undefined) {
-      updates.push('author = ?');
-      values.push(book.author);
-    }
-    if (book.isbn !== undefined) {
-      updates.push('isbn = ?');
-      values.push(book.isbn);
-    }
-    if (book.category !== undefined) {
-      updates.push('category = ?');
-      values.push(book.category);
-    }
-    if (book.published_year !== undefined) {
-      updates.push('published_year = ?');
-      values.push(book.published_year);
-    }
-    if (book.available_copies !== undefined) {
-      updates.push('available_copies = ?');
-      values.push(book.available_copies);
-    }
-    if (book.total_copies !== undefined) {
-      updates.push('total_copies = ?');
-      values.push(book.total_copies);
-    }
-
-    if (updates.length === 0) {
-      return BookModel.getById(id);
-    }
-
-    updates.push('updated_at = CURRENT_TIMESTAMP');
-    values.push(id);
-
-    const stmt = db.prepare(`UPDATE books SET ${updates.join(', ')} WHERE id = ?`);
-    stmt.run(...values);
-    return BookModel.getById(id);
-  },
-
-  delete: (id: number): boolean => {
-    const stmt = db.prepare('DELETE FROM books WHERE id = ?');
-    const result = stmt.run(id);
-    return result.changes > 0;
-  },
+// Get student by ID
+export const getStudent = (studentId: string): Student | null => {
+  try {
+    const student = db.prepare('SELECT * FROM students WHERE id = ?').get(studentId);
+    return student as Student || null;
+  } catch (error) {
+    console.error(`Error in getStudent(${studentId}):`, error);
+    throw error;
+  }
 };
 
-// Member Model Methods
-export const MemberModel = {
-  getAll: (): Member[] => {
-    const stmt = db.prepare('SELECT * FROM members ORDER BY created_at DESC');
-    return stmt.all() as Member[];
-  },
-
-  getById: (id: number): Member | undefined => {
-    const stmt = db.prepare('SELECT * FROM members WHERE id = ?');
-    return stmt.get(id) as Member | undefined;
-  },
-
-  create: (member: Omit<Member, 'id' | 'membership_date' | 'created_at' | 'updated_at'>): Member => {
-    const stmt = db.prepare(`
-      INSERT INTO members (name, email, phone, address)
-      VALUES (?, ?, ?, ?)
-    `);
-    const result = stmt.run(
-      member.name,
-      member.email,
-      member.phone || null,
-      member.address || null
-    );
-    return MemberModel.getById(result.lastInsertRowid as number) as Member;
-  },
-
-  update: (id: number, member: Partial<Member>): Member | undefined => {
-    const updates: string[] = [];
-    const values: any[] = [];
-
-    if (member.name !== undefined) {
-      updates.push('name = ?');
-      values.push(member.name);
+// Update student status and scan count
+export const updateStudentStatus = (
+  studentId: string, 
+  status: 'INSIDE' | 'OUTSIDE', 
+  scanCount: number
+): Student | null => {
+  try {
+    const result = db.prepare(`
+      UPDATE students 
+      SET current_status = ?, scan_count = ? 
+      WHERE id = ?
+    `).run(status, scanCount, studentId);
+    
+    if (result.changes > 0) {
+      return getStudent(studentId);
     }
-    if (member.email !== undefined) {
-      updates.push('email = ?');
-      values.push(member.email);
-    }
-    if (member.phone !== undefined) {
-      updates.push('phone = ?');
-      values.push(member.phone);
-    }
-    if (member.address !== undefined) {
-      updates.push('address = ?');
-      values.push(member.address);
-    }
-
-    if (updates.length === 0) {
-      return MemberModel.getById(id);
-    }
-
-    updates.push('updated_at = CURRENT_TIMESTAMP');
-    values.push(id);
-
-    const stmt = db.prepare(`UPDATE members SET ${updates.join(', ')} WHERE id = ?`);
-    stmt.run(...values);
-    return MemberModel.getById(id);
-  },
-
-  delete: (id: number): boolean => {
-    const stmt = db.prepare('DELETE FROM members WHERE id = ?');
-    const result = stmt.run(id);
-    return result.changes > 0;
-  },
+    return null;
+  } catch (error) {
+    console.error(`Error in updateStudentStatus(${studentId}):`, error);
+    throw error;
+  }
 };
+
+// Log scan event
+export const logScan = (
+  studentId: string, 
+  scanType: 'ENTRY' | 'EXIT'
+): ScanLog | null => {
+  try {
+    const timestamp = new Date().toISOString();
+    const result = db.prepare(`
+      INSERT INTO scan_logs (student_id, scan_type, timestamp)
+      VALUES (?, ?, ?)
+    `).run(studentId, scanType, timestamp);
+    
+    if (result.changes > 0) {
+      return {
+        id: result.lastInsertRowid as number,
+        student_id: studentId,
+        scan_type: scanType,
+        timestamp: timestamp
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error(`Error in logScan(${studentId}):`, error);
+    throw error;
+  }
+};
+
+// Get current library status
+export const getLibraryStatus = (): LibraryStatus | null => {
+  try {
+    const config = db.prepare('SELECT * FROM library_config WHERE id = 1').get() as LibraryConfig;
+    if (!config) return null;
+    
+    const availableSeats = Math.max(0, config.total_seats - config.occupied_seats);
+    const occupancyRate = config.total_seats > 0 
+      ? Math.round((config.occupied_seats / config.total_seats) * 100) 
+      : 0;
+    
+    return {
+      totalSeats: config.total_seats,
+      occupiedSeats: config.occupied_seats,
+      availableSeats,
+      occupancyRate,
+      lastUpdated: config.last_updated
+    };
+  } catch (error) {
+    console.error('Error in getLibraryStatus:', error);
+    throw error;
+  }
+};
+
+// Update occupied seats count
+export const updateOccupiedSeats = (increment: boolean): boolean => {
+  try {
+    const config = db.prepare('SELECT occupied_seats, total_seats FROM library_config WHERE id = 1').get() as { occupied_seats: number, total_seats: number } | undefined;
+    if (!config) return false;
+    
+    let newCount = increment 
+      ? config.occupied_seats + 1 
+      : Math.max(0, config.occupied_seats - 1);
+    
+    // Safety check for increment
+    if (increment && newCount > config.total_seats) {
+      newCount = config.total_seats;
+    }
+    
+    const result = db.prepare(`
+      UPDATE library_config 
+      SET occupied_seats = ?, last_updated = ? 
+      WHERE id = 1
+    `).run(newCount, new Date().toISOString());
+    
+    return result.changes > 0;
+  } catch (error) {
+    console.error('Error in updateOccupiedSeats:', error);
+    throw error;
+  }
+};
+
+// Helper: Get all students currently inside the library (not explicitly requested but useful)
+export const getStudentsInside = (): Student[] => {
+  try {
+    return db.prepare("SELECT * FROM students WHERE current_status = 'INSIDE'").all() as Student[];
+  } catch (error) {
+    console.error('Error in getStudentsInside:', error);
+    return [];
+  }
+};
+
+// Helper: Get recent scan logs (not explicitly requested but useful)
+export const getScanLogs = (limit: number = 20): (ScanLog & { name: string })[] => {
+  try {
+    return db.prepare(`
+      SELECT sl.*, s.name 
+      FROM scan_logs sl 
+      JOIN students s ON sl.student_id = s.id 
+      ORDER BY sl.timestamp DESC 
+      LIMIT ?
+    `).all(limit) as (ScanLog & { name: string })[];
+  } catch (error) {
+    console.error('Error in getScanLogs:', error);
+    return [];
+  }
+};
+
+// Add explicit types export for models
+export type { Student, ScanLog, LibraryConfig, LibraryStatus };

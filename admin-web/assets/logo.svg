@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Background Circle -->
+  <circle cx="50" cy="50" r="45" fill="#3B82F6" opacity="0.1"/>
+  
+  <!-- Book Icon -->
+  <g transform="translate(50, 50)">
+    <!-- Book Spine -->
+    <rect x="-8" y="-20" width="4" height="40" fill="#3B82F6" rx="1"/>
+    
+    <!-- Book Cover -->
+    <path d="M -6 -20 L 18 -20 L 18 20 L -6 20 Z" fill="#3B82F6" opacity="0.9"/>
+    
+    <!-- Book Pages -->
+    <rect x="-4" y="-18" width="20" height="36" fill="#ffffff" opacity="0.3"/>
+    
+    <!-- Book Title Line -->
+    <rect x="-2" y="-10" width="12" height="1" fill="#3B82F6" opacity="0.6"/>
+    <rect x="-2" y="-6" width="8" height="1" fill="#3B82F6" opacity="0.4"/>
+    <rect x="-2" y="-2" width="10" height="1" fill="#3B82F6" opacity="0.5"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="50" y="85" font-family="Inter, Arial, sans-serif" font-size="8" font-weight="700" text-anchor="middle" fill="#3B82F6">LIBRARY</text>
+</svg>
