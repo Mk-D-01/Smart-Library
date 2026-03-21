@@ -1,85 +1,47 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const dbPath = process.env.DB_PATH || path.join(process.cwd(), 'library.db');
-const db: Database.Database = new Database(dbPath);
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!;
 
-// Enable foreign keys
-db.pragma('foreign_keys = ON');
+export const db: SupabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+});
 
-export const initializeDatabase = () => {
+// Initialize database (for Supabase, this mainly validates connection)
+export const initializeDatabase = async () => {
   try {
-    // 1. Create students table
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS students (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        current_status TEXT NOT NULL DEFAULT 'OUTSIDE',
-        scan_count INTEGER NOT NULL DEFAULT 0,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // 2. Create scan_logs table
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS scan_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        student_id TEXT NOT NULL,
-        scan_type TEXT NOT NULL CHECK(scan_type IN ('ENTRY', 'EXIT')),
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (student_id) REFERENCES students(id)
-      )
-    `);
-
-    // 3. Create library_config table
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS library_config (
-        id INTEGER PRIMARY KEY,
-        total_seats INTEGER NOT NULL DEFAULT 100,
-        occupied_seats INTEGER NOT NULL DEFAULT 0,
-        last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Initial config: 100 seats, 0 occupied
-    const configExists = db.prepare('SELECT id FROM library_config WHERE id = 1').get();
-    if (!configExists) {
-      db.prepare(`
-        INSERT INTO library_config (id, total_seats, occupied_seats, last_updated)
-        VALUES (1, 100, 0, ?)
-      `).run(new Date().toISOString());
+    // Test connection by checking library_config table
+    const { data, error } = await db.from('library_config').select('*').limit(1);
+    
+    if (error) {
+      console.error('❌ Supabase connection error:', error);
+      throw error;
+    }
+    
+    console.log('✅ Supabase database connected successfully');
+    
+    // Ensure library config exists
+    if (!data || data.length === 0) {
+      const { error: insertError } = await db
+        .from('library_config')
+        .upsert({
+          id: 1,
+          total_seats: 100,
+          occupied_seats: 0,
+          last_updated: new Date().toISOString()
+        });
+      
+      if (insertError) {
+        console.error('❌ Error inserting library config:', insertError);
+        throw insertError;
+      }
+      
       console.log('✅ Initial library configuration inserted');
     }
-
-    // Insert 10 sample students
-    const countResult = db.prepare('SELECT COUNT(*) as count FROM students').get() as { count: number };
-    const studentCount = countResult.count;
-    if (studentCount === 0) {
-      const insertStudent = db.prepare(`
-        INSERT INTO students (id, name, email, current_status, scan_count)
-        VALUES (?, ?, ?, 'OUTSIDE', 0)
-      `);
-
-      const sampleStudents = [
-        ['ST001', 'John Doe', 'john@example.com'],
-        ['ST002', 'Jane Smith', 'jane@example.com'],
-        ['ST003', 'Alice Johnson', 'alice@example.com'],
-        ['ST004', 'Bob Williams', 'bob@example.com'],
-        ['ST005', 'Charlie Brown', 'charlie@example.com'],
-        ['ST006', 'David Miller', 'david@example.com'],
-        ['ST007', 'Eve Davis', 'eve@example.com'],
-        ['ST008', 'Frank Wilson', 'frank@example.com'],
-        ['ST009', 'Grace Lee', 'grace@example.com'],
-        ['ST010', 'Henry Taylor', 'henry@example.com'],
-      ];
-
-      for (const student of sampleStudents) {
-        insertStudent.run(student[0], student[1], student[2]);
-      }
-      console.log('✅ 10 sample students inserted');
-    }
-
+    
     console.log('🚀 Database initialized with Smart Library schema');
   } catch (error) {
     console.error('❌ Error initializing database:', error);
@@ -88,7 +50,7 @@ export const initializeDatabase = () => {
 };
 
 export const closeDatabase = () => {
-  db.close();
+  // Supabase client doesn't need explicit closing
   console.log('⏹️ Database connection closed');
 };
 

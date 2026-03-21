@@ -20,14 +20,6 @@ app.use(morgan('combined'));
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
-// Initialize database
-try {
-  initializeDatabase();
-} catch (error) {
-  console.error('Failed to initialize database:', error);
-  process.exit(1);
-}
-
 // Basic Health/Index Routes
 app.get('/', (_req: Request, res: Response) => {
   res.json({
@@ -62,33 +54,45 @@ app.use(notFoundHandler);
 // Error Handler (must be last)
 app.use(errorHandler);
 
-// Start server
-let server: any;
-if (process.env.NODE_ENV !== 'test') {
-  server = app.listen(PORT, () => {
-    console.log(`🚀 Server is running on http://localhost:${PORT}`);
-    console.log(`📚 Smart Library Management System API`);
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
-  });
-}
+// Initialize database
+const startServer = async () => {
+  try {
+    await initializeDatabase();
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    process.exit(1);
+  }
 
-// Graceful shutdown
-const shutdown = () => {
-  console.log('Stopping server...');
-  if (server) {
-    server.close(() => {
-      console.log('HTTP server closed');
+  // Start server
+  let server: any;
+  if (process.env.NODE_ENV !== 'test') {
+    server = app.listen(PORT, () => {
+      console.log(`🚀 Server is running on http://localhost:${PORT}`);
+      console.log(`📚 Smart Library Management System API`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`);
+    });
+  }
+
+  // Graceful shutdown
+  const shutdown = () => {
+    console.log('Stopping server...');
+    if (server) {
+      server.close(() => {
+        console.log('HTTP server closed');
+        closeDatabase();
+        process.exit(0);
+      });
+    } else {
       closeDatabase();
       process.exit(0);
-    });
-  } else {
-    closeDatabase();
-    process.exit(0);
-  }
+    }
+  };
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
 };
 
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+startServer();
 
 export default app;

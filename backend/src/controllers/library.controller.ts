@@ -29,7 +29,7 @@ export const processScan = async (req: Request, res: Response) => {
     }
 
     // 2. Check for duplicate scan (within 5 seconds)
-    const lastScan = getLastScan(studentId);
+    const lastScan = await getLastScan(studentId);
     if (lastScan) {
       const timeDiffMs = Date.now() - new Date(lastScan.timestamp).getTime();
       if (timeDiffMs < 5000) {
@@ -42,13 +42,13 @@ export const processScan = async (req: Request, res: Response) => {
 
     // 3–8. Run all DB changes atomically inside a single transaction and
     // return the computed values so they are definitely assigned.
-    const { action, updatedStudent, libraryStatus, createdNew } = runInTransaction(() => {
+    const { action, updatedStudent, libraryStatus, createdNew } = await runInTransaction(async () => {
       let createdNewInner = false;
 
-      let student = getStudent(studentId);
+      let student = await getStudent(studentId);
       if (!student) {
         const name = `Student ${studentId}`;
-        student = createStudent(studentId, name);
+        student = await createStudent(studentId, name);
         createdNewInner = true;
       }
 
@@ -58,26 +58,26 @@ export const processScan = async (req: Request, res: Response) => {
       const newStatusInner: 'INSIDE' | 'OUTSIDE' = isEntry ? 'INSIDE' : 'OUTSIDE';
 
       // 5. Update student (status + scan_count)
-      const updated = updateStudentStatus(studentId, newStatusInner, scanCount + 1);
+      const updated = await updateStudentStatus(studentId, newStatusInner, scanCount + 1);
       if (!updated) {
         throw new Error('Failed to update student status');
       }
       const updatedStudentInner = updated;
 
       // 6. Update library occupancy with edge-case protections inside model
-      const seatUpdated = updateOccupiedSeats(isEntry);
+      const seatUpdated = await updateOccupiedSeats(isEntry);
       if (!seatUpdated) {
         throw new Error('Failed to update library occupancy');
       }
 
       // 7. Log the scan
-      const logged = logScan(studentId, actionInner);
+      const logged = await logScan(studentId, actionInner);
       if (!logged) {
         throw new Error('Failed to log scan');
       }
 
       // 8. Get updated library status
-      const libraryStatusInner = getLibraryStatus();
+      const libraryStatusInner = await getLibraryStatus();
       if (!libraryStatusInner) {
         throw new Error('Failed to fetch updated library status');
       }
@@ -119,7 +119,7 @@ export const processScan = async (req: Request, res: Response) => {
 
 export const getLibraryStatusController = async (_req: Request, res: Response) => {
   try {
-    const status = getLibraryStatus();
+    const status = await getLibraryStatus();
     if (!status) {
       return res.status(500).json({
         success: false,
@@ -142,7 +142,7 @@ export const getLibraryStatusController = async (_req: Request, res: Response) =
 
 export const getStudentsInsideController = async (_req: Request, res: Response) => {
   try {
-    const students = getAllStudentsInside();
+    const students = await getAllStudentsInside();
 
     return res.status(200).json({
       success: true,
@@ -163,7 +163,7 @@ export const getScanLogsController = async (req: Request, res: Response) => {
     const limitParam = req.query.limit as string | undefined;
     const limit = limitParam ? parseInt(limitParam, 10) : 20;
 
-    const logs = getScanLogs(limit);
+    const logs = await getScanLogs(limit);
 
     return res.status(200).json({
       success: true,
@@ -181,7 +181,7 @@ export const getScanLogsController = async (req: Request, res: Response) => {
 
 export const resetSystem = async (_req: Request, res: Response) => {
   try {
-    resetLibrarySystem();
+    await resetLibrarySystem();
 
     return res.status(200).json({
       success: true,
@@ -195,4 +195,3 @@ export const resetSystem = async (_req: Request, res: Response) => {
     });
   }
 };
-
