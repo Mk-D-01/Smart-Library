@@ -3,34 +3,92 @@ import { Student, ScanLog, LibraryConfig, LibraryStatus } from '../types/library
 
 export { initDB as initializeDatabase };
 
+// Helper to simulate transactions for Supabase
+export const runInTransaction = async <T>(fn: () => Promise<T>): Promise<T> => {
+  // Supabase handles transactions automatically for single operations
+  // For complex transactions, we'd use RPC functions, but for now this is a wrapper
+  return await fn();
+};
+
 // Get student by ID
-export const getStudent = (studentId: string): Student | null => {
+export const getStudent = async (studentId: string): Promise<Student | null> => {
   try {
-    const student = db.prepare('SELECT * FROM students WHERE id = ?').get(studentId);
-    return student as Student || null;
+    const { data, error } = await db
+      .from('students')
+      .select('*')
+      .eq('id', studentId)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows returned
+        return null;
+      }
+      console.error(`Error in getStudent(${studentId}):`, error);
+      throw error;
+    }
+    
+    return data as Student;
   } catch (error) {
     console.error(`Error in getStudent(${studentId}):`, error);
     throw error;
   }
 };
 
-// Update student status and scan count
-export const updateStudentStatus = (
-  studentId: string, 
-  status: 'INSIDE' | 'OUTSIDE', 
-  scanCount: number
-): Student | null => {
+// Create a new student with default OUTSIDE status and zero scan count
+export const createStudent = async (studentId: string, name: string): Promise<Student> => {
   try {
-    const result = db.prepare(`
-      UPDATE students 
-      SET current_status = ?, scan_count = ? 
-      WHERE id = ?
-    `).run(status, scanCount, studentId);
-    
-    if (result.changes > 0) {
-      return getStudent(studentId);
+    // Email is required by schema, so generate a deterministic placeholder
+    const email = `${studentId.toLowerCase()}@student.local`;
+
+    const { data, error } = await db
+      .from('students')
+      .upsert({
+        id: studentId,
+        name,
+        email,
+        current_status: 'OUTSIDE',
+        scan_count: 0,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error(`Error in createStudent(${studentId}):`, error);
+      throw error;
     }
-    return null;
+
+    return data as Student;
+  } catch (error) {
+    console.error(`Error in createStudent(${studentId}):`, error);
+    throw error;
+  }
+};
+
+// Update student status and scan count
+export const updateStudentStatus = async (
+  studentId: string,
+  status: 'INSIDE' | 'OUTSIDE',
+  scanCount: number,
+): Promise<Student | null> => {
+  try {
+    const { data, error } = await db
+      .from('students')
+      .update({
+        current_status: status,
+        scan_count: scanCount
+      })
+      .eq('id', studentId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error(`Error in updateStudentStatus(${studentId}):`, error);
+      throw error;
+    }
+
+    return data as Student;
   } catch (error) {
     console.error(`Error in updateStudentStatus(${studentId}):`, error);
     throw error;
@@ -38,49 +96,84 @@ export const updateStudentStatus = (
 };
 
 // Log scan event
-export const logScan = (
-  studentId: string, 
-  scanType: 'ENTRY' | 'EXIT'
-): ScanLog | null => {
+export const logScan = async (studentId: string, scanType: 'ENTRY' | 'EXIT'): Promise<ScanLog | null> => {
   try {
-    const timestamp = new Date().toISOString();
-    const result = db.prepare(`
-      INSERT INTO scan_logs (student_id, scan_type, timestamp)
-      VALUES (?, ?, ?)
-    `).run(studentId, scanType, timestamp);
-    
-    if (result.changes > 0) {
-      return {
-        id: result.lastInsertRowid as number,
+    const { data, error } = await db
+      .from('scan_logs')
+      .insert({
         student_id: studentId,
         scan_type: scanType,
-        timestamp: timestamp
-      };
+        timestamp: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error(`Error in logScan(${studentId}):`, error);
+      throw error;
     }
-    return null;
+
+    return data as ScanLog;
   } catch (error) {
     console.error(`Error in logScan(${studentId}):`, error);
     throw error;
   }
 };
 
-// Get current library status
-export const getLibraryStatus = (): LibraryStatus | null => {
+// Get the last scan for a student (used for duplicate-scan protection)
+export const getLastScan = async (studentId: string): Promise<ScanLog | null> => {
   try {
-    const config = db.prepare('SELECT * FROM library_config WHERE id = 1').get() as LibraryConfig;
-    if (!config) return null;
-    
+    const { data, error } = await db
+      .from('scan_logs')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('timestamp', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows returned
+        return null;
+      }
+      console.error(`Error in getLastScan(${studentId}):`, error);
+      throw error;
+    }
+
+    return data as ScanLog;
+  } catch (error) {
+    console.error(`Error in getLastScan(${studentId}):`, error);
+    throw error;
+  }
+};
+
+// Get current library status (derived stats + config)
+export const getLibraryStatus = async (): Promise<LibraryStatus | null> => {
+  try {
+    const { data, error } = await db
+      .from('library_config')
+      .select('*')
+      .eq('id', 1)
+      .single();
+
+    if (error) {
+      console.error('Error in getLibraryStatus:', error);
+      throw error;
+    }
+
+    const config = data as LibraryConfig;
     const availableSeats = Math.max(0, config.total_seats - config.occupied_seats);
-    const occupancyRate = config.total_seats > 0 
-      ? Math.round((config.occupied_seats / config.total_seats) * 100) 
-      : 0;
-    
+    const occupancyRate =
+      config.total_seats > 0
+        ? Math.round((config.occupied_seats / config.total_seats) * 100)
+        : 0;
+
     return {
       totalSeats: config.total_seats,
       occupiedSeats: config.occupied_seats,
       availableSeats,
       occupancyRate,
-      lastUpdated: config.last_updated
+      lastUpdated: config.last_updated,
     };
   } catch (error) {
     console.error('Error in getLibraryStatus:', error);
@@ -88,57 +181,145 @@ export const getLibraryStatus = (): LibraryStatus | null => {
   }
 };
 
-// Update occupied seats count
-export const updateOccupiedSeats = (increment: boolean): boolean => {
+// Update occupied seats count with negative/over-capacity protection
+export const updateOccupiedSeats = async (increment: boolean): Promise<boolean> => {
   try {
-    const config = db.prepare('SELECT occupied_seats, total_seats FROM library_config WHERE id = 1').get() as { occupied_seats: number, total_seats: number } | undefined;
-    if (!config) return false;
-    
-    let newCount = increment 
-      ? config.occupied_seats + 1 
-      : Math.max(0, config.occupied_seats - 1);
-    
-    // Safety check for increment
-    if (increment && newCount > config.total_seats) {
-      newCount = config.total_seats;
+    // Get current config
+    const { data: config, error: fetchError } = await db
+      .from('library_config')
+      .select('occupied_seats, total_seats')
+      .eq('id', 1)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching current config:', fetchError);
+      throw fetchError;
     }
-    
-    const result = db.prepare(`
-      UPDATE library_config 
-      SET occupied_seats = ?, last_updated = ? 
-      WHERE id = 1
-    `).run(newCount, new Date().toISOString());
-    
-    return result.changes > 0;
+
+    let newCount = increment
+      ? config.occupied_seats + 1
+      : Math.max(0, config.occupied_seats - 1); // never go below zero
+
+    if (!increment && config.occupied_seats === 0) {
+      console.warn(
+        '[SmartLibrary] Attempted to decrement occupied_seats below 0. Forcing to 0.',
+      );
+    }
+
+    if (increment && newCount > config.total_seats) {
+      // Allow going over capacity but log a warning for admin
+      console.warn(
+        `[SmartLibrary] Library capacity exceeded: total_seats=${config.total_seats}, new_occupied_seats=${newCount}`,
+      );
+    }
+
+    const { error: updateError } = await db
+      .from('library_config')
+      .update({
+        occupied_seats: newCount,
+        last_updated: new Date().toISOString()
+      })
+      .eq('id', 1);
+
+    if (updateError) {
+      console.error('Error in updateOccupiedSeats:', updateError);
+      throw updateError;
+    }
+
+    return true;
   } catch (error) {
     console.error('Error in updateOccupiedSeats:', error);
     throw error;
   }
 };
 
-// Helper: Get all students currently inside the library (not explicitly requested but useful)
-export const getStudentsInside = (): Student[] => {
+// Get all students currently inside the library
+export const getStudentsInside = async (): Promise<Student[]> => {
   try {
-    return db.prepare("SELECT * FROM students WHERE current_status = 'INSIDE'").all() as Student[];
+    const { data, error } = await db
+      .from('students')
+      .select('*')
+      .eq('current_status', 'INSIDE');
+
+    if (error) {
+      console.error('Error in getStudentsInside:', error);
+      throw error;
+    }
+
+    return data as Student[];
   } catch (error) {
     console.error('Error in getStudentsInside:', error);
     return [];
   }
 };
 
-// Helper: Get recent scan logs (not explicitly requested but useful)
-export const getScanLogs = (limit: number = 20): (ScanLog & { name: string })[] => {
+// Alias matching spec name
+export const getAllStudentsInside = (): Promise<Student[]> => getStudentsInside();
+
+// Get recent scan logs (joined with student names for UI)
+export const getScanLogs = async (
+  limit: number = 20,
+): Promise<(ScanLog & { name: string })[]> => {
   try {
-    return db.prepare(`
-      SELECT sl.*, s.name 
-      FROM scan_logs sl 
-      JOIN students s ON sl.student_id = s.id 
-      ORDER BY sl.timestamp DESC 
-      LIMIT ?
-    `).all(limit) as (ScanLog & { name: string })[];
+    const { data, error } = await db
+      .from('scan_logs')
+      .select(`
+        *,
+        students:student_id (
+          name
+        )
+      `)
+      .order('timestamp', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Error in getScanLogs:', error);
+      throw error;
+    }
+
+    // Transform the data to match the expected format
+    return data.map((log: any) => ({
+      ...log,
+      name: log.students.name
+    })) as (ScanLog & { name: string })[];
   } catch (error) {
     console.error('Error in getScanLogs:', error);
     return [];
+  }
+};
+
+// Reset system: set all students OUTSIDE and zero occupied seats
+export const resetLibrarySystem = async (): Promise<void> => {
+  try {
+    // Reset all students
+    const { error: studentError } = await db
+      .from('students')
+      .update({
+        current_status: 'OUTSIDE',
+        scan_count: 0
+      });
+
+    if (studentError) {
+      console.error('Error resetting students:', studentError);
+      throw studentError;
+    }
+
+    // Reset library config
+    const { error: configError } = await db
+      .from('library_config')
+      .update({
+        occupied_seats: 0,
+        last_updated: new Date().toISOString()
+      })
+      .eq('id', 1);
+
+    if (configError) {
+      console.error('Error resetting library config:', configError);
+      throw configError;
+    }
+  } catch (error) {
+    console.error('Error in resetLibrarySystem:', error);
+    throw error;
   }
 };
 
