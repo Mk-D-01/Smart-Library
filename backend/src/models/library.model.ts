@@ -297,7 +297,9 @@ export const resetLibrarySystem = async (): Promise<void> => {
       .update({
         current_status: 'OUTSIDE',
         scan_count: 0
-      });
+      })
+      // Supabase/PostgREST requires a filter for UPDATE statements.
+      .neq('id', '');
 
     if (studentError) {
       console.error('Error resetting students:', studentError);

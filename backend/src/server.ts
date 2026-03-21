@@ -55,7 +55,7 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 // Initialize database
-const startServer = async () => {
+export const startServer = async () => {
   try {
     await initializeDatabase();
   } catch (error) {
@@ -93,6 +93,8 @@ const startServer = async () => {
   process.on('SIGINT', shutdown);
 };
 
-startServer();
+if (process.env.NODE_ENV !== 'test') {
+  void startServer();
+}
 
 export default app;
