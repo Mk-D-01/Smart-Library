@@ -76,11 +76,16 @@ if (process.env.NODE_ENV !== 'test') {
 // Graceful shutdown
 const shutdown = () => {
   console.log('Stopping server...');
-  server.close(() => {
-    console.log('HTTP server closed');
+  if (server) {
+    server.close(() => {
+      console.log('HTTP server closed');
+      closeDatabase();
+      process.exit(0);
+    });
+  } else {
     closeDatabase();
     process.exit(0);
-  });
+  }
 };
 
 process.on('SIGTERM', shutdown);
