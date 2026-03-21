@@ -1,83 +1,270 @@
-# Library Management System - Setup Guide
+# 📚 Smart Library Management System
 
-## Prerequisites
-- Docker Desktop only (no Node.js needed!)
-- Download: https://www.docker.com/products/docker-desktop/
+A modern, technology-driven solution that transforms traditional libraries into intelligent, efficient spaces using IoT hardware, student ID scanning, and real-time data management.
 
-## Quick Start (Team Members)
+## Overview
 
+The Smart Library system automates library entry/exit tracking while monitoring real-time occupancy. Students scan their ID cards to enter/exit, and the system processes this data to provide instant visibility of occupied and vacant seats through a digital portal.
+
+### Key Features
+- ID Card Scanning - Automated student entry/exit tracking
+- Real-time Dashboard - Live occupancy monitoring
+- Auto-sync - Offline data sync with centralized database
+- Multi-platform - Web admin panel + Flutter mobile app
+- Cloud-based - Supabase database integration
+- Scalable - Cost-effective and reliable architecture
+
+## Architecture
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   ID Scanner    │───▶│   Backend API    │───▶│   Supabase DB   │
+│   (Hardware)    │    │   (Node.js)      │    │   (Cloud)       │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                │
+                                ▼
+                       ┌──────────────────┐
+                       │   Admin Panel    │
+                       │   (Web UI)       │
+                       └──────────────────┘
+```
+
+## Quick Start
+
+### Prerequisites
+- Docker Desktop (recommended)
+- Node.js 18+ (for local development)
+- Supabase account and project
+
+### Option 1: Docker Setup (Recommended)
 ```bash
 # Clone repository
-git clone <repo-url>
-cd library-management-system
+git clone https://github.com/AnubhavKiroula/Smart-Library.git
+cd Smart-Library
 
-# Start backend (first time takes 2-3 mins)
+# Start backend with Docker
 docker-compose up
 
 # Backend runs at: http://localhost:3000
 ```
 
-## Daily Usage
-
-Start backend:
+### Option 2: Local Development
 ```bash
-docker-compose up
+# Clone repository
+git clone https://github.com/AnubhavKiroula/Smart-Library.git
+cd Smart-Library
+
+# Setup backend
+cd backend
+npm install
+cp .env.example .env
+# Edit .env with your Supabase credentials
+npm run dev
+
+# Setup admin panel (new terminal)
+cd admin-web
+python -m http.server 8080
+
+# Access points:
+# Backend API: http://localhost:3000/api
+# Admin Panel: http://localhost:8080
 ```
 
-Stop backend:
+## Admin Panel Setup
+
+The admin panel provides real-time monitoring and management capabilities:
+
+### Features
+- Live Dashboard - Real-time library statistics
+- Student Tracking - Monitor students inside library
+- Scan History - View entry/exit logs
+- System Management - Reset and configuration options
+- Auto-refresh - Updates every 5 seconds
+
+### Quick Setup
 ```bash
-docker-compose down
-# or press Ctrl+C
+# Start admin panel
+cd admin-web
+python -m http.server 8080
+
+# Visit: http://localhost:8080
+# Should see "System Online" with real data
 ```
 
-View logs:
-```bash
-docker-compose logs -f backend
+### Admin Panel URLs
+- Local Development: `http://localhost:8080`
+- Production: Deploy to your web server
+
+## Flutter App Integration
+
+### API Configuration
+```dart
+// Local development
+const String API_BASE_URL = 'http://localhost:3000/api';
+
+// Android Emulator
+const String API_BASE_URL = 'http://10.0.2.2:3000/api';
+
+// Physical Device
+const String API_BASE_URL = 'http://YOUR_IP:3000/api';
 ```
 
-Rebuild after dependency changes:
-```bash
-docker-compose up --build
+### Find Your IP
+- Windows: `ipconfig`
+- Mac/Linux: `ifconfig | grep inet`
+
+## Environment Configuration
+
+### Backend Environment Variables
+Create `backend/.env`:
+```env
+# Server Configuration
+NODE_ENV=development
+PORT=3000
+
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your-service-key
 ```
 
-## For Flutter Developers
+### Admin Panel Configuration
+Edit `admin-web/js/config.js`:
+```javascript
+const CONFIG = {
+    API_BASE_URL: 'http://localhost:3000/api',
+    REFRESH_INTERVAL: 5000,
+    // ... other settings
+};
+```
 
-Backend API base URL:
-- Localhost: `http://localhost:3000/api` 
-- Android Emulator: `http://10.0.2.2:3000/api` 
-- Physical Device: `http://YOUR_IP:3000/api` 
+## API Endpoints
 
-Find your IP:
-- Windows: `ipconfig` 
-- Mac/Linux: `ifconfig | grep inet` 
+### Core Endpoints
+- `GET /api/health` - Health check
+- `GET /api/status` - Library statistics
+- `POST /api/scan` - Process student scan
+- `GET /api/students-inside` - Current occupants
+- `GET /api/scan-logs` - Scan history
+- `POST /api/reset` - Reset system
+
+### Example Usage
+```javascript
+// Get library status
+fetch('http://localhost:3000/api/status')
+  .then(res => res.json())
+  .then(data => {
+    console.log('Library status:', data.data);
+  });
+```
+
+## Development Guide
+
+### Backend Development
+```bash
+cd backend
+npm install
+npm run dev          # Development mode
+npm run build        # Build for production
+npm start           # Run built version
+```
+
+### Admin Panel Development
+```bash
+cd admin-web
+python -m http.server 8080
+# Edit files in admin-web/js/ directory
+# Browser auto-refreshes on changes
+```
+
+### Database Schema
+The system uses Supabase with these main tables:
+- `library_config` - Library settings
+- `students` - Student records
+- `scan_logs` - Entry/exit history
 
 ## Troubleshooting
 
+### Common Issues
+
 **Port 3000 already in use:**
 ```bash
-docker-compose down
+# Windows
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
+
+# Mac/Linux
+lsof -ti:3000 | xargs kill -9
 ```
 
-**Fresh start:**
+**CORS Issues:**
+- Ensure backend CORS allows your frontend origin
+- Check `backend/src/server.ts` CORS configuration
+
+**Supabase Connection:**
+- Verify `.env` file has correct credentials
+- Test connection: `node backend/test-supabase.js`
+
+**Admin Panel Not Connecting:**
+1. Check backend is running: `curl http://localhost:3000/api/health`
+2. Verify CORS configuration
+3. Check browser console for errors
+4. Hard refresh: `Ctrl+Shift+R`
+
+### Debug Mode
 ```bash
-docker-compose down -v
-docker-compose up --build
+# Use simplified backend for debugging
+cd backend
+node simple-server.js
 ```
 
-**Code changes not reflecting:**
-- Check you're editing files in `backend/src/` 
-- Nodemon should auto-restart
+## Deployment
+
+### Docker Deployment
+```bash
+# Production build
+docker-compose -f docker-compose.prod.yml up -d
+
+# View logs
+docker-compose logs -f backend
+```
+
+### Environment Setup
+- Development: Use `npm run dev`
+- Production: Use `npm start` with built files
+- Database: Supabase handles scaling and backups
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push branch: `git push origin feature/amazing-feature`
+5. Create Pull Request
+
+### Code Standards
+- Follow existing code style
+- Add comments for complex logic
+- Test all API endpoints
+- Update documentation
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Supabase - Backend database and authentication
+- Express.js - Web framework
+- Flutter - Mobile app framework
+- Docker - Containerization platform
 
 ---
 
-# 📚 Smart Library Project
+## Support
 
-The Smart Library project is a modern, technology-driven solution designed to transform traditional libraries into intelligent, efficient, and user-friendly spaces 🚀. By combining IoT hardware, student ID card scanning, and smart data management, this system automates library entry and exit while tracking real-time occupancy with high accuracy.
+For support and questions:
+- Create an issue in the repository
+- Check the troubleshooting section above
+- Review the API documentation
 
-Each student scans their ID card while entering or leaving the library 🪪➡️⬅️. The system processes this data using a microcontroller-based setup, works offline inside the library, and later syncs securely with a centralized database 💾📡. This allows students and administrators to instantly view occupied and vacant seats through a digital portal 📊.
-
-The Smart Library eliminates manual registers ✍️❌, prevents overcrowding 🚫👥, and ensures optimal space utilization. It improves the overall student experience while helping library staff manage resources more efficiently 🎯. Designed to be scalable, cost-effective, and reliable, this project supports the vision of smart campuses and digital education 🌐🏫.
-
-Overall, the Smart Library project represents a step toward a smarter, faster, and more connected learning environment 💡📖
-
-
+Built with for smart libraries! 
