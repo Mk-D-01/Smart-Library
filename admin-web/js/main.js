@@ -102,7 +102,7 @@ class LibraryAdminApp {
     async loadInitialData() {
         try {
             // Load all data in parallel
-            const [libraryStatus, studentsInside, activityLogs] = await Promise.all([
+            const [libraryStatus, studentsInside, scanLogs] = await Promise.all([
                 apiService.getLibraryStatus(),
                 apiService.getStudentsInside(),
                 apiService.getScanLogs()
@@ -110,29 +110,24 @@ class LibraryAdminApp {
 
             // Update current data
             this.currentData.libraryStatus = libraryStatus;
-            this.currentData.studentsInside = studentsInside.students || [];
-            this.currentData.activityLogs = activityLogs.logs || [];
+            this.currentData.studentsInside = studentsInside || [];
+            this.currentData.activityLogs = scanLogs || [];
 
             // Update UI
             this.updateAllUI();
 
         } catch (error) {
             console.error('Error loading initial data:', error);
-            // Use demo data if API fails
-            this.loadDemoData();
+            // Show error state instead of falling back to demo data
+            if (window.uiManager) {
+                uiManager.showErrorState('Failed to connect to backend. Please ensure the backend server is running on port 3000.');
+            }
         }
     }
 
-    // Load demo data for development
+    // Load demo data for development (removed - using real backend only)
     loadDemoData() {
-        console.log('📊 Loading demo data...');
-        
-        this.currentData.libraryStatus = apiService.getDemoLibraryStatus();
-        this.currentData.studentsInside = apiService.getDemoStudentsInside().students;
-        this.currentData.activityLogs = apiService.getDemoScanLogs().logs;
-        
-        this.updateAllUI();
-        uiManager.showToast('Running in demo mode', 'warning');
+        console.log('Demo data disabled - using real backend only');
     }
 
     // Update all UI components
@@ -183,11 +178,13 @@ class LibraryAdminApp {
                 const message = result.action === 'ENTRY' ? 
                     'Student entry confirmed' : 'Student exit confirmed';
                 uiManager.showToast(message, 'success');
+            } else {
+                uiManager.showToast(result.error || 'Scan failed', 'error');
             }
             
         } catch (error) {
             console.error('Scan error:', error);
-            uiManager.showToast(CONFIG.ERRORS.SYSTEM_ERROR, 'error');
+            uiManager.showToast('Scan failed: ' + error.message, 'error');
         } finally {
             // Hide loading state
             uiManager.hideLoading('scanButton');
@@ -217,12 +214,12 @@ class LibraryAdminApp {
                 // Refresh all data
                 await this.refreshData();
             } else {
-                uiManager.showToast(result.error || CONFIG.ERRORS.SYSTEM_ERROR, 'error');
+                uiManager.showToast(result.error || 'Reset failed', 'error');
             }
             
         } catch (error) {
             console.error('Reset error:', error);
-            uiManager.showToast(CONFIG.ERRORS.SYSTEM_ERROR, 'error');
+            uiManager.showToast('Reset failed: ' + error.message, 'error');
         } finally {
             uiManager.hideLoading();
         }
@@ -254,12 +251,6 @@ class LibraryAdminApp {
     // Refresh all data
     async refreshData() {
         try {
-            // Check for simulated updates
-            const simulatedUpdate = apiService.simulateRealtimeUpdate();
-            if (simulatedUpdate) {
-                this.handleSimulatedUpdate(simulatedUpdate);
-            }
-            
             // Load fresh data
             const [libraryStatus, studentsInside, activityLogs] = await Promise.all([
                 apiService.getLibraryStatus(),
@@ -269,8 +260,8 @@ class LibraryAdminApp {
 
             // Update current data
             this.currentData.libraryStatus = libraryStatus;
-            this.currentData.studentsInside = studentsInside.students || [];
-            this.currentData.activityLogs = activityLogs.logs || [];
+            this.currentData.studentsInside = studentsInside || [];
+            this.currentData.activityLogs = activityLogs || [];
 
             // Update UI
             this.updateAllUI();

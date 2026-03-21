@@ -14,8 +14,13 @@ const app: Application = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(helmet());
-app.use(cors()); // Enable CORS for Flutter/Web apps
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for development
+}));
+app.use(cors({
+  origin: ['http://localhost:8080', 'http://127.0.0.1:8080'], // Allow admin panel
+  credentials: true
+}));
 app.use(morgan('combined'));
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
