@@ -9,17 +9,24 @@ class ApiService {
 
     // Generic HTTP request method
     async request(endpoint, options = {}) {
-        const url = `${this.baseUrl}${endpoint}`;
+        const url = `${this.baseUrl}${endpoint}${endpoint.includes('?') ? '&' : '?'}_t=${Date.now()}`;
         const config = {
             headers: {
                 'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache',
                 ...options.headers
             },
+            mode: 'cors',
             ...options
         };
 
+        console.log(`🌐 API Request: ${url}`);
+
         try {
             const response = await fetch(url, config);
+            
+            console.log(`📡 API Response: ${response.status} ${response.statusText}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -27,10 +34,18 @@ class ApiService {
 
             const data = await response.json();
             this.isOnline = true;
+            console.log('✅ API Success:', data);
             return data;
         } catch (error) {
             this.isOnline = false;
-            console.error(`API Error [${endpoint}]:`, error);
+            console.error(`❌ API Error [${endpoint}]:`, error);
+            
+            // If it's a CORS error, provide more helpful message
+            if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                console.error('🔒 CORS Error - Check backend CORS configuration');
+                throw new Error('CORS error: Backend may be blocking requests. Please check backend CORS configuration.');
+            }
+            
             throw error;
         }
     }
@@ -38,18 +53,11 @@ class ApiService {
     // Get library status
     async getLibraryStatus() {
         try {
-            const data = await this.request(CONFIG.ENDPOINTS.LIBRARY_STATUS);
-            return {
-                success: true,
-                totalSeats: data.totalSeats || CONFIG.TOTAL_SEATS,
-                occupiedSeats: data.occupiedSeats || 0,
-                availableSeats: data.availableSeats || CONFIG.TOTAL_SEATS,
-                occupancyPercentage: data.occupancyPercentage || 0
-            };
+            const response = await this.request(CONFIG.ENDPOINTS.LIBRARY_STATUS);
+            return response.data;
         } catch (error) {
             console.error('Error fetching library status:', error);
-            // Return demo data for development
-            return this.getDemoLibraryStatus();
+            throw error;
         }
     }
 
@@ -60,83 +68,64 @@ class ApiService {
         }
 
         try {
-            const data = await this.request(CONFIG.ENDPOINTS.SCAN, {
+            const response = await this.request(CONFIG.ENDPOINTS.SCAN, {
                 method: 'POST',
                 body: JSON.stringify({ studentId })
             });
 
-            return {
-                success: true,
-                action: data.action, // 'ENTRY' or 'EXIT'
-                student: data.student,
-                libraryStatus: data.libraryStatus,
-                message: data.message
-            };
+            return response;
         } catch (error) {
             console.error('Error processing scan:', error);
-            return {
-                success: false,
-                error: error.message || CONFIG.ERRORS.SYSTEM_ERROR
-            };
+            throw error;
         }
     }
 
     // Get students currently inside library
     async getStudentsInside() {
         try {
-            const data = await this.request(CONFIG.ENDPOINTS.STUDENTS_INSIDE);
-            return {
-                success: true,
-                students: Array.isArray(data) ? data : []
-            };
+            const response = await this.request(CONFIG.ENDPOINTS.STUDENTS_INSIDE);
+            return response.data;
         } catch (error) {
             console.error('Error fetching students inside:', error);
-            // Return demo data for development
-            return this.getDemoStudentsInside();
+            throw error;
         }
     }
 
     // Get scan logs
     async getScanLogs(limit = CONFIG.MAX_ACTIVITY_LOGS) {
         try {
-            const data = await this.request(`${CONFIG.ENDPOINTS.SCAN_LOGS}?limit=${limit}`);
-            return {
-                success: true,
-                logs: Array.isArray(data) ? data : []
-            };
+            const response = await this.request(`${CONFIG.ENDPOINTS.SCAN_LOGS}?limit=${limit}`);
+            return response.data;
         } catch (error) {
             console.error('Error fetching scan logs:', error);
-            // Return demo data for development
-            return this.getDemoScanLogs();
+            throw error;
         }
     }
 
     // Reset system
     async resetSystem() {
         try {
-            const data = await this.request(CONFIG.ENDPOINTS.ADMIN_RESET, {
+            const response = await this.request(CONFIG.ENDPOINTS.ADMIN_RESET, {
                 method: 'POST'
             });
-            return {
-                success: true,
-                message: data.message || CONFIG.MESSAGES.RESET_SUCCESS
-            };
+            return response;
         } catch (error) {
             console.error('Error resetting system:', error);
-            return {
-                success: false,
-                error: error.message || CONFIG.ERRORS.SYSTEM_ERROR
-            };
+            throw error;
         }
     }
 
     // Check system health
     async checkHealth() {
         try {
-            await this.request('/health');
+            console.log('🏥 Checking backend health...');
+            // Try test endpoint first
+            await this.request('/test');
+            console.log('✅ Backend health check passed');
             this.isOnline = true;
             return true;
         } catch (error) {
+            console.error('❌ Backend health check failed:', error);
             this.isOnline = false;
             return false;
         }

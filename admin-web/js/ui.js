@@ -20,7 +20,6 @@ class UIManager {
             occupiedSeats: document.getElementById('occupiedSeats'),
             availableSeats: document.getElementById('availableSeats'),
             occupancyPercentage: document.getElementById('occupancyPercentage'),
-            occupancyRate: document.getElementById('occupancyRate'),
             progressRingCircle: document.getElementById('progressRingCircle'),
             progressBar: document.getElementById('progressBar'),
             progressPercentage: document.getElementById('progressPercentage'),
@@ -116,9 +115,12 @@ class UIManager {
         
         // Update percentage displays
         const percentage = stats.occupancyPercentage;
-        this.elements.occupancyPercentage.textContent = `${percentage}% occupied`;
-        this.elements.occupancyRate.textContent = `${percentage}%`;
-        this.elements.progressPercentage.textContent = `${percentage}%`;
+        if (this.elements.occupancyPercentage) {
+            this.elements.occupancyPercentage.textContent = `${percentage}% occupied`;
+        }
+        if (this.elements.progressPercentage) {
+            this.elements.progressPercentage.textContent = `${percentage}%`;
+        }
         
         // Update progress bar
         this.updateProgressBar(percentage);
@@ -305,20 +307,30 @@ class UIManager {
         const hasStudents = students && students.length > 0;
         
         if (hasStudents) {
-            this.elements.studentsTableBody.innerHTML = students.map(student => `
-                <tr class="border-b border-gray-200 table-row-hover">
-                    <td class="px-4 py-3 text-sm font-mono text-gray-600">${student.id}</td>
-                    <td class="px-4 py-3 text-sm font-medium text-gray-900">${student.name}</td>
-                    <td class="px-4 py-3 text-sm text-gray-600">${Utils.formatTime(student.entryTime)}</td>
-                    <td class="px-4 py-3 text-sm ${Utils.getDurationColor(student.duration)}">${student.duration}</td>
-                    <td class="px-4 py-3 text-sm">
-                        <button onclick="window.uiManager.handleMarkExit('${student.id}')" 
-                                class="px-3 py-1 border border-red-500 text-red-500 rounded hover:bg-danger hover:text-white transition-colors text-xs">
-                            <i class="fas fa-sign-out-alt mr-1"></i>Mark Exit
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            this.elements.studentsTableBody.innerHTML = students.map(student => {
+                const entryTime = student.created_at ? new Date(student.created_at).toLocaleTimeString('en-IN', { 
+                    hour12: false, 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                }) : '--:--:--';
+                
+                const duration = student.created_at ? Utils.calculateDuration(student.created_at) : '--';
+                
+                return `
+                    <tr class="border-b border-gray-200 table-row-hover">
+                        <td class="px-4 py-3 text-sm font-mono text-gray-600">${student.id}</td>
+                        <td class="px-4 py-3 text-sm font-medium text-gray-900">${student.name}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${entryTime}</td>
+                        <td class="px-4 py-3 text-sm ${Utils.getDurationColor(duration)}">${duration}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <button onclick="window.uiManager.handleMarkExit('${student.id}')" 
+                                    class="px-3 py-1 border border-red-500 text-red-500 rounded hover:bg-danger hover:text-white transition-colors text-xs">
+                                <i class="fas fa-sign-out-alt mr-1"></i>Mark Exit
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
             
             this.elements.studentsCount.textContent = `${students.length} students`;
             this.elements.studentsCount.classList.remove('hidden');
@@ -336,19 +348,24 @@ class UIManager {
 
         if (logs && logs.length > 0) {
             this.elements.activityTableBody.innerHTML = logs.map(log => {
-                const isEntry = log.scanType === 'ENTRY';
+                const isEntry = log.scan_type === 'ENTRY';
                 const badgeClass = isEntry ? 'badge-entry' : 'badge-exit';
                 const icon = isEntry ? 'fa-sign-in-alt' : 'fa-sign-out-alt';
+                const timestamp = log.timestamp ? new Date(log.timestamp).toLocaleTimeString('en-IN', { 
+                    hour12: false, 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                }) : '--:--:--';
                 
                 return `
                     <tr class="border-b border-gray-200 table-row-hover">
-                        <td class="px-4 py-3 text-sm text-gray-600">${Utils.getRelativeTime(log.timestamp)}</td>
-                        <td class="px-4 py-3 text-sm font-mono text-gray-600">${log.studentId}</td>
-                        <td class="px-4 py-3 text-sm font-medium text-gray-900">${log.studentName}</td>
+                        <td class="px-4 py-3 text-sm text-gray-600">${timestamp}</td>
+                        <td class="px-4 py-3 text-sm font-mono text-gray-600">${log.student_id}</td>
+                        <td class="px-4 py-3 text-sm font-medium text-gray-900">${log.student_id}</td>
                         <td class="px-4 py-3 text-sm">
                             <span class="${badgeClass}">
                                 <i class="fas ${icon} text-xs"></i>
-                                ${log.scanType}
+                                ${log.scan_type}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-sm">
@@ -479,7 +496,7 @@ class UIManager {
                     this.showToast(result.error || 'Failed to mark exit', 'error');
                 }
             } catch (error) {
-                this.showToast('Error marking exit', 'error');
+                this.showToast('Error marking exit: ' + error.message, 'error');
             }
         }
     }

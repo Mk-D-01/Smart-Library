@@ -64,11 +64,12 @@ const CONFIG = {
     
     // API Endpoints
     ENDPOINTS: {
-        LIBRARY_STATUS: '/library/status',
+        LIBRARY_STATUS: '/status',
         SCAN: '/scan',
-        STUDENTS_INSIDE: '/students/inside',
+        STUDENTS_INSIDE: '/students-inside',
         SCAN_LOGS: '/scan-logs',
-        ADMIN_RESET: '/admin/reset'
+        ADMIN_RESET: '/reset',
+        HEALTH: '/health'
     },
     
     // Error Messages
