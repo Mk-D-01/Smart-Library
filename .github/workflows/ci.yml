@@ -9,13 +9,16 @@ on:
       - "feature/**"
       - "copilot/**"
 
+permissions:
+  contents: read
+
 jobs:
   backend:
     name: Backend checks
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: /home/runner/work/Smart-Library/Smart-Library/backend
+        working-directory: ./backend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,7 +28,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: /home/runner/work/Smart-Library/Smart-Library/backend/package-lock.json
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
