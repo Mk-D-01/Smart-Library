@@ -219,6 +219,25 @@ node simple-server.js
 
 ## Deployment
 
+### CI/CD (GitHub Actions)
+
+- **CI workflow**: `.github/workflows/ci.yml`
+  - Runs on push and pull requests.
+  - Executes backend install, type-check, build, and tests.
+  - If `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` secrets are present, it runs the full backend tests.
+  - If those secrets are missing, it runs a smoke test (`src/tests/simple.test.ts`) so CI remains stable.
+
+- **CD workflow**: `.github/workflows/cd-backend-docker.yml`
+  - Runs on pushes to `main` affecting `backend/**` (or manual trigger).
+  - Builds and publishes backend Docker image to GHCR:
+    - `ghcr.io/<owner>/smart-library-backend:latest` (default branch)
+    - `ghcr.io/<owner>/smart-library-backend:sha-<commit>`
+
+#### Required repository secrets
+
+- `SUPABASE_URL` (required for full backend integration tests in CI)
+- `SUPABASE_SERVICE_KEY` (required for full backend integration tests in CI)
+
 ### Docker Deployment
 ```bash
 # Production build
