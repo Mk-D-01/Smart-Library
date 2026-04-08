@@ -330,25 +330,76 @@ class _LoginScreenState extends State<LoginScreen>
                           controller: _idController,
                           decoration: InputDecoration(
                             labelText: _selectedRole == UserRole.student ? 'Student ID' : 'Admin ID',
-                            hintText: _selectedRole == UserRole.student ? 'e.g., STU001' : 'ADMIN',
+                            hintText: _selectedRole == UserRole.student ? 'e.g., 25101210443' : 'ADMIN',
                             prefixIcon: Icon(
                               _selectedRole == UserRole.student ? Icons.person : Icons.admin_panel_settings,
                             ),
                           ),
+                          keyboardType: _selectedRole == UserRole.student 
+                              ? TextInputType.number 
+                              : TextInputType.text,
+                          inputFormatters: _selectedRole == UserRole.student
+                              ? [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(11)]
+                              : null,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Please enter your ID';
                             }
-                            if (_selectedRole == UserRole.student && !value.startsWith('STU')) {
-                              return 'Student ID must start with STU';
+                            if (_selectedRole == UserRole.student) {
+                              if (value.length != 11) {
+                                return 'Student ID must be exactly 11 digits';
+                              }
+                              if (!RegExp(r'^\d{11}$').hasMatch(value)) {
+                                return 'Student ID must contain only digits';
+                              }
                             }
-                            if (_selectedRole == UserRole.admin && value.toUpperCase() != 'ADMIN') {
-                              return 'Invalid Admin ID';
+                            if (_selectedRole == UserRole.admin) {
+                              final upperValue = value.toUpperCase();
+                              if (upperValue != 'ADMIN' && upperValue != 'LIBRARIAN' && !upperValue.startsWith('ADM')) {
+                                return 'Invalid Admin ID';
+                              }
                             }
                             return null;
                           },
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _login(),
+                        ),
+                        
+                        // Error message display
+                        Consumer<AuthProvider>(
+                          builder: (context, authProvider, child) {
+                            if (authProvider.errorMessage != null) {
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.accentRed.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: AppTheme.accentRed.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.error_outline, color: AppTheme.accentRed, size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          authProvider.errorMessage!,
+                                          style: TextStyle(
+                                            color: AppTheme.accentRed,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
                         ),
                         const SizedBox(height: 24),
                         

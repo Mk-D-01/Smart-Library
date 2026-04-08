@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/library_provider.dart';
+import '../../providers/theme_provider.dart';
 
 class StudentHomeScreen extends StatefulWidget {
   const StudentHomeScreen({super.key});
@@ -20,9 +21,11 @@ class _StudentHomeScreenState extends State<StudentHomeScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     
-    // Initialize library provider if not already done
+    // Initialize library provider with student ID for personalized data
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<LibraryProvider>(context, listen: false).initialize();
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final studentId = authProvider.currentUser?.id;
+      Provider.of<LibraryProvider>(context, listen: false).initialize(studentId: studentId);
     });
   }
 
@@ -818,8 +821,8 @@ class ProfileTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
+    return Consumer2<AuthProvider, ThemeProvider>(
+      builder: (context, authProvider, themeProvider, child) {
         final user = authProvider.currentUser;
         if (user == null) {
           return const Center(child: Text('No user data'));
@@ -934,6 +937,88 @@ class ProfileTab extends StatelessWidget {
                 title: 'Library Access',
                 value: 'Granted',
                 color: AppTheme.accentGreen,
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Settings Section Header
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 12),
+                  child: Text(
+                    'Settings',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Dark Mode Toggle
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        themeProvider.isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                        color: AppTheme.primaryBlue,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Dark Mode',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            themeProvider.isDarkMode ? 'On' : 'Off',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: themeProvider.isDarkMode,
+                      onChanged: (value) {
+                        themeProvider.setDarkMode(value);
+                      },
+                      activeTrackColor: AppTheme.primaryBlue.withValues(alpha: 0.5),
+                      activeThumbColor: AppTheme.primaryBlue,
+                    ),
+                  ],
+                ),
               ),
               
               const SizedBox(height: 24),

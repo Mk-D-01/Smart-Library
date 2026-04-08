@@ -163,7 +163,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               // TODO: Implement theme switching
             },
           ),
-          const Divider(color: AppTheme.dividerColor),
+          Divider(color: AppTheme.dividerColor),
           _buildSettingItem(
             icon: Icons.notifications,
             title: 'Notifications',
@@ -176,7 +176,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               // TODO: Implement notification settings
             },
           ),
-          const Divider(color: AppTheme.dividerColor),
+          Divider(color: AppTheme.dividerColor),
           ListTile(
             leading: Icon(
               Icons.refresh,

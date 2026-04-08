@@ -1,46 +1,64 @@
 import 'package:flutter/foundation.dart';
 import 'dart:async';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/library_status.dart';
 import '../models/student.dart';
 import '../models/scan_log.dart';
 import '../models/scan_response.dart';
-import '../services/api_service.dart';
-import '../config/api_config.dart';
+import '../services/supabase_service.dart';
 
 class LibraryProvider with ChangeNotifier {
-  final ApiService _api = ApiService();
+  final SupabaseService _supabase = SupabaseService();
   
   LibraryStatus? _libraryStatus;
   List<Student> _studentsInside = [];
   List<ScanLog> _scanLogs = [];
+  List<ScanLog> _studentScanLogs = []; // Logs for current logged-in student
   bool _isLoading = false;
   String? _error;
   Timer? _autoRefreshTimer;
-  bool _isSystemOnline = false;
+  bool _isSystemOnline = true;
+  
+  // Real-time subscriptions
+  RealtimeChannel? _statusChannel;
+  RealtimeChannel? _logsChannel;
 
   // Getters
   LibraryStatus? get libraryStatus => _libraryStatus;
   List<Student> get studentsInside => _studentsInside;
   List<ScanLog> get scanLogs => _scanLogs;
+  List<ScanLog> get studentScanLogs => _studentScanLogs;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isSystemOnline => _isSystemOnline;
 
   // Initialize
-  Future<void> initialize() async {
-    await checkHealth();
-    await fetchAllData();
-    startAutoRefresh();
+  Future<void> initialize({String? studentId}) async {
+    await fetchAllData(studentId: studentId);
+    startAutoRefresh(studentId: studentId);
+    _setupRealtimeSubscriptions();
   }
 
-  // Check backend health
-  Future<void> checkHealth() async {
-    _isSystemOnline = await _api.checkHealth();
-    notifyListeners();
+  // Setup real-time subscriptions
+  void _setupRealtimeSubscriptions() {
+    try {
+      _statusChannel = _supabase.subscribeToLibraryStatus((payload) {
+        debugPrint('Library status changed: $payload');
+        fetchLibraryStatus();
+      });
+      
+      _logsChannel = _supabase.subscribeToScanLogs((payload) {
+        debugPrint('New scan log: $payload');
+        fetchScanLogs();
+        fetchStudentsInside();
+      });
+    } catch (e) {
+      debugPrint('Error setting up realtime: $e');
+    }
   }
 
   // Fetch all data
-  Future<void> fetchAllData() async {
+  Future<void> fetchAllData({String? studentId}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
@@ -50,9 +68,12 @@ class LibraryProvider with ChangeNotifier {
         fetchLibraryStatus(),
         fetchStudentsInside(),
         fetchScanLogs(),
+        if (studentId != null) fetchStudentScanLogs(studentId),
       ]);
+      _isSystemOnline = true;
     } catch (e) {
       _error = e.toString();
+      debugPrint('Fetch all data error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -62,51 +83,85 @@ class LibraryProvider with ChangeNotifier {
   // Fetch library status
   Future<void> fetchLibraryStatus() async {
     try {
-      _libraryStatus = await _api.getLibraryStatus();
+      _libraryStatus = await _supabase.getLibraryStatus();
       _isSystemOnline = true;
       notifyListeners();
     } catch (e) {
       _isSystemOnline = false;
       _error = 'Failed to fetch library status';
+      debugPrint('Fetch status error: $e');
       notifyListeners();
-      rethrow;
     }
   }
 
   // Fetch students inside
   Future<void> fetchStudentsInside() async {
     try {
-      _studentsInside = await _api.getStudentsInside();
+      _studentsInside = await _supabase.getStudentsInside();
       notifyListeners();
     } catch (e) {
       _error = 'Failed to fetch students';
+      debugPrint('Fetch students error: $e');
       notifyListeners();
-      rethrow;
     }
   }
 
-  // Fetch scan logs
-  Future<void> fetchScanLogs({String? studentId}) async {
+  // Fetch scan logs (all logs - for admin)
+  Future<void> fetchScanLogs() async {
     try {
-      _scanLogs = await _api.getScanLogs(studentId: studentId);
+      _scanLogs = await _supabase.getScanLogs(limit: 50);
       notifyListeners();
     } catch (e) {
       _error = 'Failed to fetch scan logs';
+      debugPrint('Fetch logs error: $e');
       notifyListeners();
-      rethrow;
+    }
+  }
+
+  // Fetch scan logs for specific student
+  Future<void> fetchStudentScanLogs(String studentId) async {
+    try {
+      _studentScanLogs = await _supabase.getStudentScanLogs(studentId, limit: 50);
+      notifyListeners();
+    } catch (e) {
+      _error = 'Failed to fetch student scan logs';
+      debugPrint('Fetch student logs error: $e');
+      notifyListeners();
     }
   }
 
   // Process scan
   Future<ScanResponse> processScan(String studentId) async {
     try {
-      final response = await _api.processScan(studentId);
+      final result = await _supabase.processScan(studentId);
       
-      // Refresh data after scan
-      await fetchAllData();
-      
-      return response;
+      if (result['success'] == true) {
+        // Refresh data after scan
+        await fetchAllData(studentId: studentId);
+        
+        final student = Student(
+          id: result['studentId'] ?? studentId,
+          name: 'Student ${result['studentId'] ?? studentId}',
+          currentStatus: result['newStatus'] ?? 'UNKNOWN',
+          scanCount: 0,
+        );
+        
+        return ScanResponse(
+          success: true,
+          action: result['action'] ?? 'UNKNOWN',
+          student: student,
+          libraryStatus: _libraryStatus ?? LibraryStatus(
+            totalSeats: 100,
+            occupiedSeats: 0,
+            availableSeats: 100,
+            occupancyPercentage: 0,
+          ),
+        );
+      } else {
+        throw Exception(result['error'] ?? 'Scan failed');
+      }
     } catch (e) {
+      debugPrint('Scan error: $e');
       throw Exception('Scan failed: $e');
     }
   }
@@ -114,19 +169,37 @@ class LibraryProvider with ChangeNotifier {
   // Reset system (admin only)
   Future<void> resetSystem() async {
     try {
-      await _api.resetSystem();
+      final success = await _supabase.resetSystem();
+      if (!success) {
+        throw Exception('Reset failed');
+      }
       await fetchAllData();
     } catch (e) {
+      debugPrint('Reset error: $e');
       throw Exception('Reset failed: $e');
     }
   }
 
+  // Update library capacity (admin only)
+  Future<void> updateCapacity(int totalSeats) async {
+    try {
+      final success = await _supabase.updateCapacity(totalSeats);
+      if (!success) {
+        throw Exception('Update failed');
+      }
+      await fetchLibraryStatus();
+    } catch (e) {
+      debugPrint('Update capacity error: $e');
+      throw Exception('Update failed: $e');
+    }
+  }
+
   // Auto-refresh
-  void startAutoRefresh() {
+  void startAutoRefresh({String? studentId}) {
     _autoRefreshTimer?.cancel();
     _autoRefreshTimer = Timer.periodic(
-      ApiConfig.refreshInterval,
-      (_) => fetchAllData(),
+      const Duration(seconds: 10), // Refresh every 10 seconds
+      (_) => fetchAllData(studentId: studentId),
     );
   }
 
@@ -135,13 +208,20 @@ class LibraryProvider with ChangeNotifier {
   }
 
   // Refresh all data (alias for UI)
-  Future<void> refreshData() async {
-    await fetchAllData();
+  Future<void> refreshData({String? studentId}) async {
+    await fetchAllData(studentId: studentId);
   }
 
   @override
   void dispose() {
     stopAutoRefresh();
+    // Clean up subscriptions
+    if (_statusChannel != null) {
+      _supabase.unsubscribe(_statusChannel!);
+    }
+    if (_logsChannel != null) {
+      _supabase.unsubscribe(_logsChannel!);
+    }
     super.dispose();
   }
 }

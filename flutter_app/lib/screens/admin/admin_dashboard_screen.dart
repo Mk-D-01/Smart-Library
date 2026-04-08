@@ -368,13 +368,13 @@ class StudentsTab extends StatelessWidget {
 
         final students = provider.studentsInside;
         if (students.isEmpty) {
-          return const Center(
+          return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.person_outline, size: 64, color: AppTheme.textTertiary),
-                SizedBox(height: 16),
-                Text(
+                const SizedBox(height: 16),
+                const Text(
                   'No students inside',
                   style: TextStyle(
                     fontSize: 24,
@@ -447,9 +447,9 @@ class ScannerTab extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.qr_code_scanner, size: 80, color: AppTheme.textTertiary),
+          Icon(Icons.qr_code_scanner, size: 80, color: AppTheme.textTertiary),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'QR Scanner',
             style: TextStyle(
               fontSize: 24,
@@ -458,7 +458,7 @@ class ScannerTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Scanner functionality will be implemented here',
             style: TextStyle(
               color: AppTheme.textTertiary,
@@ -470,7 +470,7 @@ class ScannerTab extends StatelessWidget {
               // TODO: Implement QR scanner
               debugPrint('QR scanner not yet implemented');
             },
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.camera_alt),
