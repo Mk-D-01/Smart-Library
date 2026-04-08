@@ -15,18 +15,22 @@ class Student {
     this.updatedAt,
   });
 
+  // Helper to parse DateTime from various formats
+  static DateTime? _parseDateTime(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value);
+    return null;
+  }
+
   factory Student.fromJson(Map<String, dynamic> json) {
     return Student(
-      id: json['id'],
+      id: json['id']?.toString() ?? '',
       name: json['name'] ?? 'Student ${json['id']}',
       currentStatus: json['current_status'] ?? 'OUTSIDE',
       scanCount: json['scan_count'] ?? 0,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
-          : null,
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at']) 
-          : null,
+      createdAt: _parseDateTime(json['created_at']),
+      updatedAt: _parseDateTime(json['updated_at']),
     );
   }
 

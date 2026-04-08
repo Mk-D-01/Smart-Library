@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/library_status.dart';
 import '../models/student.dart';
@@ -18,6 +19,7 @@ class LibraryProvider with ChangeNotifier {
   String? _error;
   Timer? _autoRefreshTimer;
   bool _isSystemOnline = true;
+  DateTime? _lastSync;
   
   // Real-time subscriptions
   RealtimeChannel? _statusChannel;
@@ -31,6 +33,9 @@ class LibraryProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isSystemOnline => _isSystemOnline;
+  String? get lastSyncTime => _lastSync != null 
+      ? DateFormat('MMM d, h:mm a').format(_lastSync!)
+      : null;
 
   // Initialize
   Future<void> initialize({String? studentId}) async {
@@ -71,6 +76,7 @@ class LibraryProvider with ChangeNotifier {
         if (studentId != null) fetchStudentScanLogs(studentId),
       ]);
       _isSystemOnline = true;
+      _lastSync = DateTime.now();
     } catch (e) {
       _error = e.toString();
       debugPrint('Fetch all data error: $e');
@@ -210,6 +216,91 @@ class LibraryProvider with ChangeNotifier {
   // Refresh all data (alias for UI)
   Future<void> refreshData({String? studentId}) async {
     await fetchAllData(studentId: studentId);
+  }
+
+  // ============ ADMIN OPERATIONS ============
+
+  /// Add a new student (admin only)
+  Future<Student?> addStudent(String studentId, {String? name}) async {
+    try {
+      final student = await _supabase.addStudent(studentId, name: name);
+      if (student != null) {
+        await fetchAllData();
+      }
+      return student;
+    } catch (e) {
+      debugPrint('Add student error: $e');
+      return null;
+    }
+  }
+
+  /// Get all students (admin management)
+  Future<List<Student>> getAllStudents() async {
+    try {
+      return await _supabase.getAllStudents();
+    } catch (e) {
+      debugPrint('Get all students error: $e');
+      return [];
+    }
+  }
+
+  /// Delete a student (admin only)
+  Future<bool> deleteStudent(String studentId) async {
+    try {
+      final success = await _supabase.deleteStudent(studentId);
+      if (success) {
+        await fetchAllData();
+      }
+      return success;
+    } catch (e) {
+      debugPrint('Delete student error: $e');
+      return false;
+    }
+  }
+
+  /// Update student name
+  Future<bool> updateStudentName(String studentId, String newName) async {
+    try {
+      final success = await _supabase.updateStudentName(studentId, newName);
+      if (success) {
+        await fetchAllData();
+      }
+      return success;
+    } catch (e) {
+      debugPrint('Update student name error: $e');
+      return false;
+    }
+  }
+
+  /// Clear all data (admin only - use with caution!)
+  Future<bool> clearAllData() async {
+    try {
+      final success = await _supabase.clearAllData();
+      if (success) {
+        await fetchAllData();
+      }
+      return success;
+    } catch (e) {
+      debugPrint('Clear all data error: $e');
+      return false;
+    }
+  }
+
+  /// Update library settings
+  Future<bool> updateLibrarySettings({int? totalSeats, int? occupiedSeats}) async {
+    try {
+      final success = await _supabase.updateLibrarySettings(
+        totalSeats: totalSeats,
+        occupiedSeats: occupiedSeats,
+      );
+      if (success) {
+        await fetchLibraryStatus();
+      }
+      return success;
+    } catch (e) {
+      debugPrint('Update settings error: $e');
+      return false;
+    }
   }
 
   @override

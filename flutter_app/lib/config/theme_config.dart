@@ -48,6 +48,7 @@ class AppTheme {
   static const Color warning = accentAmber;
   static const Color danger = accentRed;
   static Color get cardBackground => surface;
+  static Color get divider => _isDarkMode ? _darkSurfaceVariant : const Color(0xFFE5E7EB);
   static Color get dividerColor => surfaceVariant;
   
   // SHADOWS
