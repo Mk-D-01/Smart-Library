@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import '../screens/student/student_home_screen.dart';
+import '../screens/student/student_dashboard_screen.dart';
 import '../screens/student/student_history_screen.dart';
 import '../screens/student/student_profile_screen.dart';
-import '../screens/admin/admin_dashboard_screen.dart';
-import '../screens/admin/admin_students_inside_screen.dart';
-import '../screens/admin/admin_scanner_screen.dart';
-import '../screens/admin/admin_controls_screen.dart';
+import '../screens/admin/admin_overview_screen.dart';
+import '../screens/admin/admin_students_screen.dart';
+import '../screens/admin/admin_manual_scanner_screen.dart';
+import '../screens/admin/admin_settings_screen.dart';
 import '../config/theme_config.dart';
 
 class AppNavigation extends StatefulWidget {
@@ -30,7 +30,7 @@ class _AppNavigationState extends State<AppNavigation> {
       NavigationItem(
         icon: Icons.home,
         label: 'Home',
-        screen: const StudentHomeScreen(),
+        screen: const StudentDashboardScreen(),
       ),
       NavigationItem(
         icon: Icons.history,
@@ -47,23 +47,23 @@ class _AppNavigationState extends State<AppNavigation> {
     _adminScreens = [
       NavigationItem(
         icon: Icons.dashboard,
-        label: 'Dashboard',
-        screen: const AdminDashboardScreen(),
+        label: 'Overview',
+        screen: const AdminOverviewScreen(),
       ),
       NavigationItem(
         icon: Icons.people,
         label: 'Students',
-        screen: const AdminStudentsInsideScreen(),
+        screen: const AdminStudentsScreen(),
       ),
       NavigationItem(
         icon: Icons.qr_code_scanner,
         label: 'Scanner',
-        screen: const AdminScannerScreen(),
+        screen: const AdminManualScannerScreen(),
       ),
       NavigationItem(
         icon: Icons.settings,
-        label: 'Controls',
-        screen: const AdminControlsScreen(),
+        label: 'Settings',
+        screen: const AdminSettingsScreen(),
       ),
     ];
   }

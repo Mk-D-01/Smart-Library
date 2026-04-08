@@ -134,19 +134,18 @@ class SupabaseService {
           .maybeSingle();
       
       int currentScanCount = 0;
-      String currentStatus = 'OUTSIDE';
       
       if (studentResponse == null) {
-        // Create new student
+        // Create new student with default email
         await _client.from(SupabaseConfig.studentsTable).insert({
           'id': studentId,
           'name': 'Student $studentId',
+          'email': '$studentId@student.edu', // Default email
           'current_status': 'OUTSIDE',
           'scan_count': 0,
         });
       } else {
         currentScanCount = studentResponse['scan_count'] ?? 0;
-        currentStatus = studentResponse['current_status'] ?? 'OUTSIDE';
       }
       
       // Determine action based on scan count (odd/even logic)
@@ -348,7 +347,7 @@ class SupabaseService {
   // ============ ADMIN OPERATIONS ============
 
   /// Add a new student to the database (Admin only)
-  Future<Student?> addStudent(String studentId, {String? name}) async {
+  Future<Student?> addStudent(String studentId, {String? name, String? email}) async {
     try {
       // Check if student already exists
       final existing = await getStudent(studentId);
@@ -362,6 +361,7 @@ class SupabaseService {
           .insert({
             'id': studentId,
             'name': name ?? 'Student $studentId',
+            'email': email ?? '$studentId@student.edu', // Default email to satisfy NOT NULL constraint
             'current_status': 'OUTSIDE',
             'scan_count': 0,
             'created_at': DateTime.now().toIso8601String(),

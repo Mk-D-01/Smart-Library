@@ -446,9 +446,16 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
     );
   }
 
-  String _formatTime(String timestamp) {
+  String _formatTime(dynamic timestamp) {
     try {
-      final dateTime = DateTime.parse(timestamp);
+      DateTime dateTime;
+      if (timestamp is DateTime) {
+        dateTime = timestamp;
+      } else if (timestamp is String) {
+        dateTime = DateTime.parse(timestamp);
+      } else {
+        return 'Unknown';
+      }
       return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
     } catch (e) {
       return 'Unknown';
