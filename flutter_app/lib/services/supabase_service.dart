@@ -1,0 +1,347 @@
+import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../config/supabase_config.dart';
+import '../models/library_status.dart';
+import '../models/student.dart';
+import '../models/scan_log.dart';
+
+/// Service for direct Supabase database operations
+class SupabaseService {
+  final SupabaseClient _client = Supabase.instance.client;
+
+  // ============ LIBRARY STATUS ============
+  
+  /// Get current library status (occupied seats, total capacity)
+  Future<LibraryStatus> getLibraryStatus() async {
+    try {
+      final response = await _client
+          .from(SupabaseConfig.libraryConfigTable)
+          .select()
+          .limit(1)
+          .single();
+      
+      final totalSeats = response['total_seats'] ?? 100;
+      final occupiedSeats = response['occupied_seats'] ?? 0;
+      final availableSeats = totalSeats - occupiedSeats;
+      final occupancyPercentage = totalSeats > 0 
+          ? (occupiedSeats / totalSeats) * 100 
+          : 0.0;
+      
+      return LibraryStatus(
+        totalSeats: totalSeats,
+        occupiedSeats: occupiedSeats,
+        availableSeats: availableSeats,
+        occupancyPercentage: occupancyPercentage,
+      );
+    } catch (e) {
+      debugPrint('Error getting library status: $e');
+      // Return default status if config doesn't exist
+      return LibraryStatus(
+        totalSeats: 100,
+        occupiedSeats: 0,
+        availableSeats: 100,
+        occupancyPercentage: 0,
+      );
+    }
+  }
+
+  // ============ STUDENTS ============
+  
+  /// Get list of students currently inside the library
+  Future<List<Student>> getStudentsInside() async {
+    try {
+      final response = await _client
+          .from(SupabaseConfig.studentsTable)
+          .select()
+          .eq('current_status', 'INSIDE')
+          .order('updated_at', ascending: false);
+      
+      return (response as List)
+          .map((json) => Student.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting students inside: $e');
+      return [];
+    }
+  }
+
+  /// Get student by ID
+  Future<Student?> getStudent(String studentId) async {
+    try {
+      final response = await _client
+          .from(SupabaseConfig.studentsTable)
+          .select()
+          .eq('id', studentId)
+          .maybeSingle();
+      
+      if (response != null) {
+        return Student.fromJson(response);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting student: $e');
+      return null;
+    }
+  }
+
+  /// Check if student exists in database
+  Future<bool> studentExists(String studentId) async {
+    try {
+      final response = await _client
+          .from(SupabaseConfig.studentsTable)
+          .select('id')
+          .eq('id', studentId)
+          .maybeSingle();
+      
+      return response != null;
+    } catch (e) {
+      debugPrint('Error checking student: $e');
+      return false;
+    }
+  }
+
+  /// Create or update student (upsert)
+  Future<Student?> upsertStudent(String studentId, {String? name}) async {
+    try {
+      final response = await _client
+          .from(SupabaseConfig.studentsTable)
+          .upsert({
+            'id': studentId,
+            'name': name ?? 'Student $studentId',
+            'current_status': 'OUTSIDE',
+            'scan_count': 0,
+          }, onConflict: 'id')
+          .select()
+          .single();
+      
+      return Student.fromJson(response);
+    } catch (e) {
+      debugPrint('Error upserting student: $e');
+      return null;
+    }
+  }
+
+  // ============ SCAN OPERATIONS ============
+  
+  /// Process a scan (entry/exit)
+  Future<Map<String, dynamic>> processScan(String studentId) async {
+    try {
+      // Get or create student
+      var studentResponse = await _client
+          .from(SupabaseConfig.studentsTable)
+          .select()
+          .eq('id', studentId)
+          .maybeSingle();
+      
+      int currentScanCount = 0;
+      String currentStatus = 'OUTSIDE';
+      
+      if (studentResponse == null) {
+        // Create new student
+        await _client.from(SupabaseConfig.studentsTable).insert({
+          'id': studentId,
+          'name': 'Student $studentId',
+          'current_status': 'OUTSIDE',
+          'scan_count': 0,
+        });
+      } else {
+        currentScanCount = studentResponse['scan_count'] ?? 0;
+        currentStatus = studentResponse['current_status'] ?? 'OUTSIDE';
+      }
+      
+      // Determine action based on scan count (odd/even logic)
+      final bool isEntry = currentScanCount % 2 == 0;
+      final String action = isEntry ? 'ENTRY' : 'EXIT';
+      final String newStatus = isEntry ? 'INSIDE' : 'OUTSIDE';
+      
+      // Update student
+      await _client
+          .from(SupabaseConfig.studentsTable)
+          .update({
+            'current_status': newStatus,
+            'scan_count': currentScanCount + 1,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', studentId);
+      
+      // Log the scan
+      await _client.from(SupabaseConfig.scanLogsTable).insert({
+        'student_id': studentId,
+        'scan_type': action,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+      
+      // Update library config
+      final configResponse = await _client
+          .from(SupabaseConfig.libraryConfigTable)
+          .select()
+          .limit(1)
+          .maybeSingle();
+      
+      if (configResponse != null) {
+        int occupiedSeats = configResponse['occupied_seats'] ?? 0;
+        if (isEntry) {
+          occupiedSeats = occupiedSeats + 1;
+        } else {
+          occupiedSeats = (occupiedSeats - 1).clamp(0, 9999);
+        }
+        
+        await _client
+            .from(SupabaseConfig.libraryConfigTable)
+            .update({
+              'occupied_seats': occupiedSeats,
+              'last_updated': DateTime.now().toIso8601String(),
+            })
+            .eq('id', configResponse['id']);
+      }
+      
+      return {
+        'success': true,
+        'action': action,
+        'studentId': studentId,
+        'newStatus': newStatus,
+      };
+    } catch (e) {
+      debugPrint('Error processing scan: $e');
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
+    }
+  }
+
+  // ============ SCAN LOGS ============
+  
+  /// Get scan logs with optional filters
+  Future<List<ScanLog>> getScanLogs({
+    int limit = 20,
+    String? studentId,
+  }) async {
+    try {
+      var query = _client
+          .from(SupabaseConfig.scanLogsTable)
+          .select();
+      
+      if (studentId != null) {
+        query = query.eq('student_id', studentId);
+      }
+      
+      final response = await query
+          .order('timestamp', ascending: false)
+          .limit(limit);
+      
+      return (response as List)
+          .map((json) => ScanLog.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting scan logs: $e');
+      return [];
+    }
+  }
+
+  /// Get scan logs for a specific student
+  Future<List<ScanLog>> getStudentScanLogs(String studentId, {int limit = 50}) async {
+    return getScanLogs(studentId: studentId, limit: limit);
+  }
+
+  // ============ ADMIN OPERATIONS ============
+  
+  /// Reset system - mark all students as OUTSIDE, reset occupied seats
+  Future<bool> resetSystem() async {
+    try {
+      // Mark all students as OUTSIDE
+      await _client
+          .from(SupabaseConfig.studentsTable)
+          .update({
+            'current_status': 'OUTSIDE',
+            'scan_count': 0,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .neq('id', ''); // Update all rows
+      
+      // Reset occupied seats
+      await _client
+          .from(SupabaseConfig.libraryConfigTable)
+          .update({
+            'occupied_seats': 0,
+            'last_updated': DateTime.now().toIso8601String(),
+          })
+          .neq('id', 0); // Update all config rows
+      
+      return true;
+    } catch (e) {
+      debugPrint('Error resetting system: $e');
+      return false;
+    }
+  }
+
+  /// Update library capacity
+  Future<bool> updateCapacity(int totalSeats) async {
+    try {
+      await _client
+          .from(SupabaseConfig.libraryConfigTable)
+          .update({
+            'total_seats': totalSeats,
+            'last_updated': DateTime.now().toIso8601String(),
+          })
+          .neq('id', 0);
+      
+      return true;
+    } catch (e) {
+      debugPrint('Error updating capacity: $e');
+      return false;
+    }
+  }
+
+  // ============ REAL-TIME SUBSCRIPTIONS ============
+  
+  /// Subscribe to library status changes
+  RealtimeChannel subscribeToLibraryStatus(void Function(dynamic) callback) {
+    return _client
+        .channel('library_status')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: SupabaseConfig.libraryConfigTable,
+          callback: (payload) => callback(payload),
+        )
+        .subscribe();
+  }
+
+  /// Subscribe to scan logs (for real-time activity feed)
+  RealtimeChannel subscribeToScanLogs(void Function(dynamic) callback) {
+    return _client
+        .channel('scan_logs')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: SupabaseConfig.scanLogsTable,
+          callback: (payload) => callback(payload),
+        )
+        .subscribe();
+  }
+
+  /// Unsubscribe from a channel
+  Future<void> unsubscribe(RealtimeChannel channel) async {
+    await _client.removeChannel(channel);
+  }
+
+  // ============ VALIDATION ============
+  
+  /// Validate 11-digit student ID format
+  static bool isValidStudentId(String id) {
+    // Must be exactly 11 digits
+    if (id.length != 11) return false;
+    // Must be all digits
+    if (!RegExp(r'^\d{11}$').hasMatch(id)) return false;
+    return true;
+  }
+
+  /// Validate admin credentials
+  static bool isValidAdminId(String id) {
+    // Admin can use 'ADMIN' or specific admin IDs
+    return id.toUpperCase() == 'ADMIN' || 
+           id.toUpperCase() == 'LIBRARIAN' ||
+           id.startsWith('ADM');
+  }
+}
