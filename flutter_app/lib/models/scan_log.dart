@@ -12,11 +12,22 @@ class ScanLog {
   });
 
   factory ScanLog.fromJson(Map<String, dynamic> json) {
+    // Handle timestamp that could be String or DateTime
+    DateTime parsedTimestamp;
+    final timestampValue = json['timestamp'];
+    if (timestampValue is DateTime) {
+      parsedTimestamp = timestampValue;
+    } else if (timestampValue is String) {
+      parsedTimestamp = DateTime.parse(timestampValue);
+    } else {
+      parsedTimestamp = DateTime.now();
+    }
+    
     return ScanLog(
       id: json['id'],
-      studentId: json['student_id'],
-      scanType: json['scan_type'],
-      timestamp: DateTime.parse(json['timestamp']),
+      studentId: json['student_id'] ?? '',
+      scanType: json['scan_type'] ?? 'UNKNOWN',
+      timestamp: parsedTimestamp,
     );
   }
 

@@ -134,19 +134,18 @@ class SupabaseService {
           .maybeSingle();
       
       int currentScanCount = 0;
-      String currentStatus = 'OUTSIDE';
       
       if (studentResponse == null) {
-        // Create new student
+        // Create new student with default email
         await _client.from(SupabaseConfig.studentsTable).insert({
           'id': studentId,
           'name': 'Student $studentId',
+          'email': '$studentId@student.edu', // Default email
           'current_status': 'OUTSIDE',
           'scan_count': 0,
         });
       } else {
         currentScanCount = studentResponse['scan_count'] ?? 0;
-        currentStatus = studentResponse['current_status'] ?? 'OUTSIDE';
       }
       
       // Determine action based on scan count (odd/even logic)
@@ -343,5 +342,148 @@ class SupabaseService {
     return id.toUpperCase() == 'ADMIN' || 
            id.toUpperCase() == 'LIBRARIAN' ||
            id.startsWith('ADM');
+  }
+
+  // ============ ADMIN OPERATIONS ============
+
+  /// Add a new student to the database (Admin only)
+  Future<Student?> addStudent(String studentId, {String? name, String? email}) async {
+    try {
+      // Check if student already exists
+      final existing = await getStudent(studentId);
+      if (existing != null) {
+        debugPrint('Student $studentId already exists');
+        return existing;
+      }
+
+      final response = await _client
+          .from(SupabaseConfig.studentsTable)
+          .insert({
+            'id': studentId,
+            'name': name ?? 'Student $studentId',
+            'email': email ?? '$studentId@student.edu', // Default email to satisfy NOT NULL constraint
+            'current_status': 'OUTSIDE',
+            'scan_count': 0,
+            'created_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .select()
+          .single();
+      
+      return Student.fromJson(response);
+    } catch (e) {
+      debugPrint('Error adding student: $e');
+      return null;
+    }
+  }
+
+  /// Get all students (for admin management)
+  Future<List<Student>> getAllStudents() async {
+    try {
+      final response = await _client
+          .from(SupabaseConfig.studentsTable)
+          .select()
+          .order('created_at', ascending: false);
+      
+      return (response as List)
+          .map((json) => Student.fromJson(json))
+          .toList();
+    } catch (e) {
+      debugPrint('Error getting all students: $e');
+      return [];
+    }
+  }
+
+  /// Delete a student (Admin only)
+  Future<bool> deleteStudent(String studentId) async {
+    try {
+      // First delete scan logs for this student
+      await _client
+          .from(SupabaseConfig.scanLogsTable)
+          .delete()
+          .eq('student_id', studentId);
+      
+      // Then delete the student
+      await _client
+          .from(SupabaseConfig.studentsTable)
+          .delete()
+          .eq('id', studentId);
+      
+      return true;
+    } catch (e) {
+      debugPrint('Error deleting student: $e');
+      return false;
+    }
+  }
+
+  /// Update student name
+  Future<bool> updateStudentName(String studentId, String newName) async {
+    try {
+      await _client
+          .from(SupabaseConfig.studentsTable)
+          .update({
+            'name': newName,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', studentId);
+      
+      return true;
+    } catch (e) {
+      debugPrint('Error updating student name: $e');
+      return false;
+    }
+  }
+
+  /// Clear all data (Admin only - use with caution!)
+  Future<bool> clearAllData() async {
+    try {
+      // Delete all scan logs
+      await _client
+          .from(SupabaseConfig.scanLogsTable)
+          .delete()
+          .neq('id', 0);
+      
+      // Delete all students
+      await _client
+          .from(SupabaseConfig.studentsTable)
+          .delete()
+          .neq('id', '');
+      
+      // Reset library config
+      await _client
+          .from(SupabaseConfig.libraryConfigTable)
+          .update({
+            'occupied_seats': 0,
+            'last_updated': DateTime.now().toIso8601String(),
+          })
+          .neq('id', 0);
+      
+      return true;
+    } catch (e) {
+      debugPrint('Error clearing data: $e');
+      return false;
+    }
+  }
+
+  /// Update library settings (total seats, etc.)
+  Future<bool> updateLibrarySettings({int? totalSeats, int? occupiedSeats}) async {
+    try {
+      final updates = <String, dynamic>{
+        'last_updated': DateTime.now().toIso8601String(),
+      };
+      
+      if (totalSeats != null) updates['total_seats'] = totalSeats;
+      if (occupiedSeats != null) updates['occupied_seats'] = occupiedSeats;
+      
+      await _client
+          .from(SupabaseConfig.libraryConfigTable)
+          .update(updates)
+          .neq('id', 0);
+      
+      return true;
+    } catch (e) {
+      debugPrint('Error updating library settings: $e');
+      return false;
+    }
   }
 }
