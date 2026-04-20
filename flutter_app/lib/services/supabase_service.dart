@@ -10,7 +10,7 @@ class SupabaseService {
   final SupabaseClient _client = Supabase.instance.client;
 
   // ============ LIBRARY STATUS ============
-  
+
   /// Get current library status (occupied seats, total capacity)
   Future<LibraryStatus> getLibraryStatus() async {
     try {
@@ -19,14 +19,13 @@ class SupabaseService {
           .select()
           .limit(1)
           .single();
-      
+
       final totalSeats = response['total_seats'] ?? 100;
       final occupiedSeats = response['occupied_seats'] ?? 0;
       final availableSeats = totalSeats - occupiedSeats;
-      final occupancyPercentage = totalSeats > 0 
-          ? (occupiedSeats / totalSeats) * 100 
-          : 0.0;
-      
+      final occupancyPercentage =
+          totalSeats > 0 ? (occupiedSeats / totalSeats) * 100 : 0.0;
+
       return LibraryStatus(
         totalSeats: totalSeats,
         occupiedSeats: occupiedSeats,
@@ -46,7 +45,7 @@ class SupabaseService {
   }
 
   // ============ STUDENTS ============
-  
+
   /// Get list of students currently inside the library
   Future<List<Student>> getStudentsInside() async {
     try {
@@ -54,11 +53,9 @@ class SupabaseService {
           .from(SupabaseConfig.studentsTable)
           .select()
           .eq('current_status', 'INSIDE')
-          .order('updated_at', ascending: false);
-      
-      return (response as List)
-          .map((json) => Student.fromJson(json))
-          .toList();
+          .order('created_at', ascending: false);
+
+      return (response as List).map((json) => Student.fromJson(json)).toList();
     } catch (e) {
       debugPrint('Error getting students inside: $e');
       return [];
@@ -73,7 +70,7 @@ class SupabaseService {
           .select()
           .eq('id', studentId)
           .maybeSingle();
-      
+
       if (response != null) {
         return Student.fromJson(response);
       }
@@ -92,7 +89,7 @@ class SupabaseService {
           .select('id')
           .eq('id', studentId)
           .maybeSingle();
-      
+
       return response != null;
     } catch (e) {
       debugPrint('Error checking student: $e');
@@ -113,7 +110,7 @@ class SupabaseService {
           }, onConflict: 'id')
           .select()
           .single();
-      
+
       return Student.fromJson(response);
     } catch (e) {
       debugPrint('Error upserting student: $e');
@@ -122,7 +119,7 @@ class SupabaseService {
   }
 
   // ============ SCAN OPERATIONS ============
-  
+
   /// Process a scan (entry/exit)
   Future<Map<String, dynamic>> processScan(String studentId) async {
     try {
@@ -132,68 +129,61 @@ class SupabaseService {
           .select()
           .eq('id', studentId)
           .maybeSingle();
-      
+
       int currentScanCount = 0;
-      
+
       if (studentResponse == null) {
         // Create new student with default email
         await _client.from(SupabaseConfig.studentsTable).insert({
           'id': studentId,
           'name': 'Student $studentId',
-          'email': '$studentId@student.edu', // Default email
+          'email': '$studentId@student.edu',
           'current_status': 'OUTSIDE',
           'scan_count': 0,
         });
       } else {
         currentScanCount = studentResponse['scan_count'] ?? 0;
       }
-      
+
       // Determine action based on scan count (odd/even logic)
       final bool isEntry = currentScanCount % 2 == 0;
       final String action = isEntry ? 'ENTRY' : 'EXIT';
       final String newStatus = isEntry ? 'INSIDE' : 'OUTSIDE';
-      
+
       // Update student
-      await _client
-          .from(SupabaseConfig.studentsTable)
-          .update({
-            'current_status': newStatus,
-            'scan_count': currentScanCount + 1,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', studentId);
-      
+      await _client.from(SupabaseConfig.studentsTable).update({
+        'current_status': newStatus,
+        'scan_count': currentScanCount + 1,
+      }).eq('id', studentId);
+
       // Log the scan
       await _client.from(SupabaseConfig.scanLogsTable).insert({
         'student_id': studentId,
         'scan_type': action,
         'timestamp': DateTime.now().toIso8601String(),
       });
-      
+
       // Update library config
       final configResponse = await _client
           .from(SupabaseConfig.libraryConfigTable)
           .select()
           .limit(1)
           .maybeSingle();
-      
+
       if (configResponse != null) {
         int occupiedSeats = configResponse['occupied_seats'] ?? 0;
         if (isEntry) {
-          occupiedSeats = occupiedSeats + 1;
+          occupiedSeats += 1;
         } else {
           occupiedSeats = (occupiedSeats - 1).clamp(0, 9999);
         }
-        
-        await _client
-            .from(SupabaseConfig.libraryConfigTable)
-            .update({
-              'occupied_seats': occupiedSeats,
-              'last_updated': DateTime.now().toIso8601String(),
-            })
-            .eq('id', configResponse['id']);
+
+        await _client.from(SupabaseConfig.libraryConfigTable).update({
+          'occupied_seats': occupiedSeats,
+          'last_updated': DateTime.now().toIso8601String(),
+        }).eq('id', configResponse['id']);
       }
-      
+
       return {
         'success': true,
         'action': action,
@@ -210,28 +200,23 @@ class SupabaseService {
   }
 
   // ============ SCAN LOGS ============
-  
+
   /// Get scan logs with optional filters
   Future<List<ScanLog>> getScanLogs({
     int limit = 20,
     String? studentId,
   }) async {
     try {
-      var query = _client
-          .from(SupabaseConfig.scanLogsTable)
-          .select();
-      
+      var query = _client.from(SupabaseConfig.scanLogsTable).select();
+
       if (studentId != null) {
         query = query.eq('student_id', studentId);
       }
-      
-      final response = await query
-          .order('timestamp', ascending: false)
-          .limit(limit);
-      
-      return (response as List)
-          .map((json) => ScanLog.fromJson(json))
-          .toList();
+
+      final response =
+          await query.order('timestamp', ascending: false).limit(limit);
+
+      return (response as List).map((json) => ScanLog.fromJson(json)).toList();
     } catch (e) {
       debugPrint('Error getting scan logs: $e');
       return [];
@@ -239,34 +224,28 @@ class SupabaseService {
   }
 
   /// Get scan logs for a specific student
-  Future<List<ScanLog>> getStudentScanLogs(String studentId, {int limit = 50}) async {
+  Future<List<ScanLog>> getStudentScanLogs(String studentId,
+      {int limit = 50}) async {
     return getScanLogs(studentId: studentId, limit: limit);
   }
 
   // ============ ADMIN OPERATIONS ============
-  
+
   /// Reset system - mark all students as OUTSIDE, reset occupied seats
   Future<bool> resetSystem() async {
     try {
       // Mark all students as OUTSIDE
-      await _client
-          .from(SupabaseConfig.studentsTable)
-          .update({
-            'current_status': 'OUTSIDE',
-            'scan_count': 0,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .neq('id', ''); // Update all rows
-      
+      await _client.from(SupabaseConfig.studentsTable).update({
+        'current_status': 'OUTSIDE',
+        'scan_count': 0,
+      }).neq('id', '');
+
       // Reset occupied seats
-      await _client
-          .from(SupabaseConfig.libraryConfigTable)
-          .update({
-            'occupied_seats': 0,
-            'last_updated': DateTime.now().toIso8601String(),
-          })
-          .neq('id', 0); // Update all config rows
-      
+      await _client.from(SupabaseConfig.libraryConfigTable).update({
+        'occupied_seats': 0,
+        'last_updated': DateTime.now().toIso8601String(),
+      }).neq('id', 0);
+
       return true;
     } catch (e) {
       debugPrint('Error resetting system: $e');
@@ -277,14 +256,11 @@ class SupabaseService {
   /// Update library capacity
   Future<bool> updateCapacity(int totalSeats) async {
     try {
-      await _client
-          .from(SupabaseConfig.libraryConfigTable)
-          .update({
-            'total_seats': totalSeats,
-            'last_updated': DateTime.now().toIso8601String(),
-          })
-          .neq('id', 0);
-      
+      await _client.from(SupabaseConfig.libraryConfigTable).update({
+        'total_seats': totalSeats,
+        'last_updated': DateTime.now().toIso8601String(),
+      }).neq('id', 0);
+
       return true;
     } catch (e) {
       debugPrint('Error updating capacity: $e');
@@ -293,7 +269,7 @@ class SupabaseService {
   }
 
   // ============ REAL-TIME SUBSCRIPTIONS ============
-  
+
   /// Subscribe to library status changes
   RealtimeChannel subscribeToLibraryStatus(void Function(dynamic) callback) {
     return _client
@@ -326,30 +302,27 @@ class SupabaseService {
   }
 
   // ============ VALIDATION ============
-  
+
   /// Validate 11-digit student ID format
   static bool isValidStudentId(String id) {
-    // Must be exactly 11 digits
     if (id.length != 11) return false;
-    // Must be all digits
     if (!RegExp(r'^\d{11}$').hasMatch(id)) return false;
     return true;
   }
 
   /// Validate admin credentials
   static bool isValidAdminId(String id) {
-    // Admin can use 'ADMIN' or specific admin IDs
-    return id.toUpperCase() == 'ADMIN' || 
-           id.toUpperCase() == 'LIBRARIAN' ||
-           id.startsWith('ADM');
+    return id.toUpperCase() == 'ADMIN' ||
+        id.toUpperCase() == 'LIBRARIAN' ||
+        id.startsWith('ADM');
   }
 
   // ============ ADMIN OPERATIONS ============
 
   /// Add a new student to the database (Admin only)
-  Future<Student?> addStudent(String studentId, {String? name, String? email}) async {
+  Future<Student?> addStudent(String studentId,
+      {String? name, String? email}) async {
     try {
-      // Check if student already exists
       final existing = await getStudent(studentId);
       if (existing != null) {
         debugPrint('Student $studentId already exists');
@@ -361,15 +334,14 @@ class SupabaseService {
           .insert({
             'id': studentId,
             'name': name ?? 'Student $studentId',
-            'email': email ?? '$studentId@student.edu', // Default email to satisfy NOT NULL constraint
+            'email': email ?? '$studentId@student.edu',
             'current_status': 'OUTSIDE',
             'scan_count': 0,
             'created_at': DateTime.now().toIso8601String(),
-            'updated_at': DateTime.now().toIso8601String(),
           })
           .select()
           .single();
-      
+
       return Student.fromJson(response);
     } catch (e) {
       debugPrint('Error adding student: $e');
@@ -384,10 +356,8 @@ class SupabaseService {
           .from(SupabaseConfig.studentsTable)
           .select()
           .order('created_at', ascending: false);
-      
-      return (response as List)
-          .map((json) => Student.fromJson(json))
-          .toList();
+
+      return (response as List).map((json) => Student.fromJson(json)).toList();
     } catch (e) {
       debugPrint('Error getting all students: $e');
       return [];
@@ -397,18 +367,16 @@ class SupabaseService {
   /// Delete a student (Admin only)
   Future<bool> deleteStudent(String studentId) async {
     try {
-      // First delete scan logs for this student
       await _client
           .from(SupabaseConfig.scanLogsTable)
           .delete()
           .eq('student_id', studentId);
-      
-      // Then delete the student
+
       await _client
           .from(SupabaseConfig.studentsTable)
           .delete()
           .eq('id', studentId);
-      
+
       return true;
     } catch (e) {
       debugPrint('Error deleting student: $e');
@@ -419,14 +387,10 @@ class SupabaseService {
   /// Update student name
   Future<bool> updateStudentName(String studentId, String newName) async {
     try {
-      await _client
-          .from(SupabaseConfig.studentsTable)
-          .update({
-            'name': newName,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', studentId);
-      
+      await _client.from(SupabaseConfig.studentsTable).update({
+        'name': newName,
+      }).eq('id', studentId);
+
       return true;
     } catch (e) {
       debugPrint('Error updating student name: $e');
@@ -437,27 +401,15 @@ class SupabaseService {
   /// Clear all data (Admin only - use with caution!)
   Future<bool> clearAllData() async {
     try {
-      // Delete all scan logs
-      await _client
-          .from(SupabaseConfig.scanLogsTable)
-          .delete()
-          .neq('id', 0);
-      
-      // Delete all students
-      await _client
-          .from(SupabaseConfig.studentsTable)
-          .delete()
-          .neq('id', '');
-      
-      // Reset library config
-      await _client
-          .from(SupabaseConfig.libraryConfigTable)
-          .update({
-            'occupied_seats': 0,
-            'last_updated': DateTime.now().toIso8601String(),
-          })
-          .neq('id', 0);
-      
+      await _client.from(SupabaseConfig.scanLogsTable).delete().neq('id', 0);
+
+      await _client.from(SupabaseConfig.studentsTable).delete().neq('id', '');
+
+      await _client.from(SupabaseConfig.libraryConfigTable).update({
+        'occupied_seats': 0,
+        'last_updated': DateTime.now().toIso8601String(),
+      }).neq('id', 0);
+
       return true;
     } catch (e) {
       debugPrint('Error clearing data: $e');
@@ -466,20 +418,23 @@ class SupabaseService {
   }
 
   /// Update library settings (total seats, etc.)
-  Future<bool> updateLibrarySettings({int? totalSeats, int? occupiedSeats}) async {
+  Future<bool> updateLibrarySettings({
+    int? totalSeats,
+    int? occupiedSeats,
+  }) async {
     try {
       final updates = <String, dynamic>{
         'last_updated': DateTime.now().toIso8601String(),
       };
-      
+
       if (totalSeats != null) updates['total_seats'] = totalSeats;
       if (occupiedSeats != null) updates['occupied_seats'] = occupiedSeats;
-      
+
       await _client
           .from(SupabaseConfig.libraryConfigTable)
           .update(updates)
           .neq('id', 0);
-      
+
       return true;
     } catch (e) {
       debugPrint('Error updating library settings: $e');
