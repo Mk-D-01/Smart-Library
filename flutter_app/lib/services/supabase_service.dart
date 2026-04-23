@@ -367,11 +367,34 @@ class SupabaseService {
   /// Delete a student (Admin only)
   Future<bool> deleteStudent(String studentId) async {
     try {
+      // Check if student was inside before deleting
+      final student = await getStudent(studentId);
+      if (student != null && student.currentStatus == 'INSIDE') {
+        // Decrement occupied seats
+        final configResponse = await _client
+            .from(SupabaseConfig.libraryConfigTable)
+            .select()
+            .limit(1)
+            .maybeSingle();
+
+        if (configResponse != null) {
+          int occupiedSeats = configResponse['occupied_seats'] ?? 0;
+          occupiedSeats = (occupiedSeats - 1).clamp(0, 9999);
+
+          await _client.from(SupabaseConfig.libraryConfigTable).update({
+            'occupied_seats': occupiedSeats,
+            'last_updated': DateTime.now().toIso8601String(),
+          }).eq('id', configResponse['id']);
+        }
+      }
+
+      // Delete scan logs
       await _client
           .from(SupabaseConfig.scanLogsTable)
           .delete()
           .eq('student_id', studentId);
 
+      // Delete student
       await _client
           .from(SupabaseConfig.studentsTable)
           .delete()

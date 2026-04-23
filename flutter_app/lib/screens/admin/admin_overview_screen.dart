@@ -55,13 +55,17 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppTheme.accentAmber, AppTheme.accentAmber.withValues(alpha: 0.8)],
+                colors: [
+                  AppTheme.accentAmber,
+                  AppTheme.accentAmber.withValues(alpha: 0.8)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 20),
+            child: const Icon(Icons.admin_panel_settings_rounded,
+                color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -93,7 +97,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
             ),
             child: IconButton(
               onPressed: () => _showLogoutDialog(context),
-              icon: Icon(Icons.logout_rounded, color: AppTheme.accentRed, size: 20),
+              icon: const Icon(Icons.logout_rounded,
+                  color: AppTheme.accentRed, size: 20),
               tooltip: 'Logout',
             ),
           ),
@@ -136,7 +141,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                     Expanded(
                       child: _buildStatCard(
                         'Occupied',
-                        '${status?.occupiedSeats ?? 0}',
+                        '${studentsInside.length}',
                         Icons.person,
                         AppTheme.accentAmber,
                       ),
@@ -149,7 +154,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                     Expanded(
                       child: _buildStatCard(
                         'Available',
-                        '${status?.availableSeats ?? 0}',
+                        '${(status?.totalSeats ?? 100) - studentsInside.length}',
                         Icons.check_circle,
                         AppTheme.accentGreen,
                       ),
@@ -158,9 +163,11 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                     Expanded(
                       child: _buildStatCard(
                         'Occupancy',
-                        '${status?.occupancyPercentage ?? 0}%',
+                        '${((studentsInside.length / (status?.totalSeats ?? 100)) * 100).toStringAsFixed(1)}%',
                         Icons.pie_chart,
-                        status?.occupancyPercentage != null && status!.occupancyPercentage >= 80
+                        ((studentsInside.length / (status?.totalSeats ?? 100)) *
+                                    100) >=
+                                80
                             ? AppTheme.accentRed
                             : AppTheme.primaryBlue,
                       ),
@@ -216,17 +223,23 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                               ),
                             ),
                           ),
-                          title: Text(student.name, style: const TextStyle(fontSize: 14)),
-                          subtitle: Text('ID: ${student.id}', style: const TextStyle(fontSize: 12)),
+                          title: Text(student.name,
+                              style: const TextStyle(fontSize: 14)),
+                          subtitle: Text('ID: ${student.id}',
+                              style: const TextStyle(fontSize: 12)),
                           trailing: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: AppTheme.accentGreen,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Text(
                               'INSIDE',
-                              style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         );
@@ -270,7 +283,9 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                         final isEntry = log.isEntry;
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: isEntry ? AppTheme.accentGreen : AppTheme.accentAmber,
+                            backgroundColor: isEntry
+                                ? AppTheme.accentGreen
+                                : AppTheme.accentAmber,
                             radius: 18,
                             child: Icon(
                               isEntry ? Icons.login : Icons.logout,
@@ -278,17 +293,25 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                               size: 18,
                             ),
                           ),
-                          title: Text('Student ${log.studentId}', style: const TextStyle(fontSize: 14)),
-                          subtitle: Text(log.relativeTime, style: const TextStyle(fontSize: 12)),
+                          title: Text('Student ${log.studentId}',
+                              style: const TextStyle(fontSize: 14)),
+                          subtitle: Text(log.relativeTime,
+                              style: const TextStyle(fontSize: 12)),
                           trailing: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: isEntry ? AppTheme.accentGreen : AppTheme.accentAmber,
+                              color: isEntry
+                                  ? AppTheme.accentGreen
+                                  : AppTheme.accentAmber,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
                               log.scanType,
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
                         );
@@ -303,7 +326,8 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
