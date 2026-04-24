@@ -10,7 +10,7 @@ import '../services/supabase_service.dart';
 
 class LibraryProvider with ChangeNotifier {
   final SupabaseService _supabase = SupabaseService();
-  
+
   LibraryStatus? _libraryStatus;
   List<Student> _studentsInside = [];
   List<ScanLog> _scanLogs = [];
@@ -20,7 +20,7 @@ class LibraryProvider with ChangeNotifier {
   Timer? _autoRefreshTimer;
   bool _isSystemOnline = true;
   DateTime? _lastSync;
-  
+
   // Real-time subscriptions
   RealtimeChannel? _statusChannel;
   RealtimeChannel? _logsChannel;
@@ -33,9 +33,27 @@ class LibraryProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isSystemOnline => _isSystemOnline;
-  String? get lastSyncTime => _lastSync != null 
-      ? DateFormat('MMM d, h:mm a').format(_lastSync!)
-      : null;
+  String? get lastSyncTime =>
+      _lastSync != null ? DateFormat('MMM d, h:mm a').format(_lastSync!) : null;
+
+  // Sync library status from ground truth (_studentsInside)
+  void _syncLibraryStatus() {
+    final totalSeats = _libraryStatus?.totalSeats ?? 100;
+    final occupiedSeats = _studentsInside.length;
+    final availableSeats = totalSeats - occupiedSeats;
+    final occupancyPercentage =
+        totalSeats > 0 ? (occupiedSeats / totalSeats) * 100 : 0.0;
+
+    _libraryStatus = LibraryStatus(
+      totalSeats: totalSeats,
+      occupiedSeats: occupiedSeats,
+      availableSeats: availableSeats,
+      occupancyPercentage: occupancyPercentage,
+    );
+
+    debugPrint(
+        '[LibraryProvider] _syncLibraryStatus -> studentsInside: $occupiedSeats, available: $availableSeats, occupancy: ${occupancyPercentage.toStringAsFixed(1)}%');
+  }
 
   // Initialize
   Future<void> initialize({String? studentId}) async {
@@ -51,7 +69,7 @@ class LibraryProvider with ChangeNotifier {
         debugPrint('Library status changed: $payload');
         fetchLibraryStatus();
       });
-      
+
       _logsChannel = _supabase.subscribeToScanLogs((payload) {
         debugPrint('New scan log: $payload');
         fetchScanLogs();
@@ -90,6 +108,7 @@ class LibraryProvider with ChangeNotifier {
   Future<void> fetchLibraryStatus() async {
     try {
       _libraryStatus = await _supabase.getLibraryStatus();
+      _syncLibraryStatus(); // Ensure status matches ground truth
       _isSystemOnline = true;
       notifyListeners();
     } catch (e) {
@@ -104,6 +123,9 @@ class LibraryProvider with ChangeNotifier {
   Future<void> fetchStudentsInside() async {
     try {
       _studentsInside = await _supabase.getStudentsInside();
+      _syncLibraryStatus(); // Recalculate status from ground truth
+      debugPrint(
+          '[LibraryProvider] fetchStudentsInside -> count: ${_studentsInside.length}');
       notifyListeners();
     } catch (e) {
       _error = 'Failed to fetch students';
@@ -127,7 +149,8 @@ class LibraryProvider with ChangeNotifier {
   // Fetch scan logs for specific student
   Future<void> fetchStudentScanLogs(String studentId) async {
     try {
-      _studentScanLogs = await _supabase.getStudentScanLogs(studentId, limit: 50);
+      _studentScanLogs =
+          await _supabase.getStudentScanLogs(studentId, limit: 50);
       notifyListeners();
     } catch (e) {
       _error = 'Failed to fetch student scan logs';
@@ -140,28 +163,29 @@ class LibraryProvider with ChangeNotifier {
   Future<ScanResponse> processScan(String studentId) async {
     try {
       final result = await _supabase.processScan(studentId);
-      
+
       if (result['success'] == true) {
         // Refresh data after scan
         await fetchAllData(studentId: studentId);
-        
+
         final student = Student(
           id: result['studentId'] ?? studentId,
           name: 'Student ${result['studentId'] ?? studentId}',
           currentStatus: result['newStatus'] ?? 'UNKNOWN',
           scanCount: 0,
         );
-        
+
         return ScanResponse(
           success: true,
           action: result['action'] ?? 'UNKNOWN',
           student: student,
-          libraryStatus: _libraryStatus ?? LibraryStatus(
-            totalSeats: 100,
-            occupiedSeats: 0,
-            availableSeats: 100,
-            occupancyPercentage: 0,
-          ),
+          libraryStatus: _libraryStatus ??
+              LibraryStatus(
+                totalSeats: 100,
+                occupiedSeats: 0,
+                availableSeats: 100,
+                occupancyPercentage: 0,
+              ),
         );
       } else {
         throw Exception(result['error'] ?? 'Scan failed');
@@ -247,6 +271,13 @@ class LibraryProvider with ChangeNotifier {
   /// Delete a student (admin only)
   Future<bool> deleteStudent(String studentId) async {
     try {
+      // Optimistically remove from local state for instant UI sync
+      _studentsInside.removeWhere((s) => s.id == studentId);
+      _syncLibraryStatus();
+      debugPrint(
+          '[LibraryProvider] deleteStudent -> removed $studentId locally, count: ${_studentsInside.length}');
+      notifyListeners();
+
       final success = await _supabase.deleteStudent(studentId);
       if (success) {
         await fetchAllData();
@@ -254,6 +285,53 @@ class LibraryProvider with ChangeNotifier {
       return success;
     } catch (e) {
       debugPrint('Delete student error: $e');
+      return false;
+    }
+  }
+
+  /// Force exit a student (admin only)
+  Future<bool> forceExitStudent(String studentId,
+      {String studentName = 'Unknown'}) async {
+    try {
+      // Optimistically remove from local state for instant UI sync
+      _studentsInside.removeWhere((s) => s.id == studentId);
+      _syncLibraryStatus();
+      debugPrint(
+          '[LibraryProvider] forceExitStudent -> removed $studentId locally, count: ${_studentsInside.length}');
+      notifyListeners();
+
+      final supabase = Supabase.instance.client;
+
+      final student = await _supabase.getStudent(studentId);
+      final currentScanCount = student?.scanCount ?? 0;
+
+      await supabase.from('students').update({
+        'current_status': 'OUTSIDE',
+        'scan_count': currentScanCount + 1,
+      }).eq('id', studentId);
+
+      await supabase.from('scan_logs').insert({
+        'student_id': studentId,
+        'scan_type': 'EXIT',
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+
+      final configResponse =
+          await supabase.from('library_config').select().limit(1).maybeSingle();
+      if (configResponse != null) {
+        int occupiedSeats = configResponse['occupied_seats'] ?? 0;
+        occupiedSeats = (occupiedSeats - 1).clamp(0, 9999);
+        await supabase.from('library_config').update({
+          'occupied_seats': occupiedSeats,
+          'last_updated': DateTime.now().toIso8601String(),
+        }).eq('id', configResponse['id']);
+      }
+
+      await fetchAllData();
+
+      return true;
+    } catch (e) {
+      debugPrint('Force exit error: $e');
       return false;
     }
   }
@@ -287,7 +365,8 @@ class LibraryProvider with ChangeNotifier {
   }
 
   /// Update library settings
-  Future<bool> updateLibrarySettings({int? totalSeats, int? occupiedSeats}) async {
+  Future<bool> updateLibrarySettings(
+      {int? totalSeats, int? occupiedSeats}) async {
     try {
       final success = await _supabase.updateLibrarySettings(
         totalSeats: totalSeats,

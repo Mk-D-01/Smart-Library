@@ -8,7 +8,8 @@ class AdminStudentsInsideScreen extends StatefulWidget {
   const AdminStudentsInsideScreen({super.key});
 
   @override
-  State<AdminStudentsInsideScreen> createState() => _AdminStudentsInsideScreenState();
+  State<AdminStudentsInsideScreen> createState() =>
+      _AdminStudentsInsideScreenState();
 }
 
 class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
@@ -33,7 +34,8 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
 
     // Initial data fetch
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<LibraryProvider>(context, listen: false).fetchStudentsInside();
+      Provider.of<LibraryProvider>(context, listen: false)
+          .fetchStudentsInside();
     });
 
     // Start auto-refresh animation
@@ -73,7 +75,7 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
               builder: (context, child) {
                 return Transform.rotate(
                   angle: _refreshAnimation.value * 2 * 3.14159,
-                  child: Icon(
+                  child: const Icon(
                     Icons.refresh,
                     color: Colors.white,
                     size: 20,
@@ -159,7 +161,8 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -200,7 +203,7 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
               color: AppTheme.primaryBlue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(60),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.no_meeting_room,
               size: 60,
               color: AppTheme.primaryBlue,
@@ -260,7 +263,8 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
   }
 
   Widget _buildStudentCard(Student student) {
-    final duration = _calculateDuration((student.updatedAt?.toIso8601String() ?? DateTime.now().toIso8601String()));
+    final duration = _calculateDuration((student.updatedAt?.toIso8601String() ??
+        DateTime.now().toIso8601String()));
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -320,12 +324,13 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppTheme.accentGreen.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
+                      child: const Text(
                         'INSIDE',
                         style: TextStyle(
                           fontSize: 10,
@@ -370,7 +375,8 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.accentAmber,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     textStyle: const TextStyle(fontSize: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(6),
@@ -412,30 +418,21 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
     }
   }
 
-  void _showForceExitDialog(Student student) {
-    showDialog(
+  Future<void> _showForceExitDialog(Student student) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Force Exit'),
         content: Text(
-          'Force exit ${student.name} (${student.id}) from the library?',
+          'Force exit ${student.name} (${student.id}) from the library?\n\nThis will update their status to OUTSIDE, log an EXIT scan, and decrement occupied seats.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // TODO: Implement force exit API call
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Force exit processed'),
-                  backgroundColor: AppTheme.accentGreen,
-                ),
-              );
-            },
+            onPressed: () => Navigator.of(context).pop(true),
             child: const Text(
               'Force Exit',
               style: TextStyle(color: AppTheme.accentAmber),
@@ -444,6 +441,29 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
         ],
       ),
     );
+
+    if (confirmed == true) {
+      final provider = Provider.of<LibraryProvider>(context, listen: false);
+      final success = await provider.forceExitStudent(student.id,
+          studentName: student.name);
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${student.name} force exited successfully'),
+            backgroundColor: AppTheme.accentGreen,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to force exit student'),
+            backgroundColor: AppTheme.accentRed,
+          ),
+        );
+      }
+    }
   }
 
   void _showAddStudentDialog() {

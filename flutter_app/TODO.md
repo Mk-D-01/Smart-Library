@@ -1,33 +1,11 @@
-# Smart Library Flutter Frontend Implementation
+# Fix Inconsistent Student Count - TODO
 
-## Status: ✅ COMPLETE! All features implemented.
-
-## Features Delivered:
-- ✅ Clean architecture (providers, models, utils, widgets, screens)
-- ✅ Student/Admin login with validation, role toggle
-- ✅ Student & Admin dashboards
-- ✅ Profile screen with edit/logout/theme toggle
-- ✅ Dark/Light theme with persistence
-- ✅ Provider state management
-- ✅ Named routes & navigation
-- ✅ Modern Material 3 UI, responsive
-- ✅ Loading states, error handling, mock auth
-
-## Run:
-cd flutter_app
-flutter pub get
-flutter run
-
-## All errors fixed! Clean compile.
-
-1. [✅] Directory structure
-2. [✅] Providers
-3. [✅] Models
-4. [✅] Utils
-5. [✅] Reusable Widgets
-6. [✅] Screens
-7. [✅] main.dart
-8. [✅] Cleanup
-9. [✅] Tested structure
-10. [✅] Complete!
+- [x] Create plan and get approval
+- [x] Update `library_provider.dart` - Add `_syncLibraryStatus()`, fix delete/exit logic, add debug logs
+- [x] Update `admin_dashboard_screen.dart` - Fix Occupied/Available stat cards
+- [x] Update `admin_controls_screen.dart` - Fix Occupied/Available cards
+- [x] Update `student_dashboard_screen.dart` - Fix Occupied quick-stat
+- [x] Update `student_home_screen.dart` - Fix DashboardTab Occupied stat
+- [x] Update `admin_settings_screen.dart` - Fix Current Occupancy
+- [x] Verify all screens use `provider.studentsInside.length`
 

@@ -45,16 +45,26 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 // System Status
                 _buildSectionCard(
                   title: 'System Status',
-                  icon: provider.isSystemOnline ? Icons.check_circle : Icons.error,
-                  iconColor: provider.isSystemOnline ? AppTheme.accentGreen : AppTheme.accentRed,
+                  icon: provider.isSystemOnline
+                      ? Icons.check_circle
+                      : Icons.error,
+                  iconColor: provider.isSystemOnline
+                      ? AppTheme.accentGreen
+                      : AppTheme.accentRed,
                   children: [
                     ListTile(
                       leading: Icon(
-                        provider.isSystemOnline ? Icons.cloud_done : Icons.cloud_off,
-                        color: provider.isSystemOnline ? AppTheme.accentGreen : AppTheme.accentRed,
+                        provider.isSystemOnline
+                            ? Icons.cloud_done
+                            : Icons.cloud_off,
+                        color: provider.isSystemOnline
+                            ? AppTheme.accentGreen
+                            : AppTheme.accentRed,
                       ),
                       title: const Text('Connection'),
-                      subtitle: Text(provider.isSystemOnline ? 'Connected to Supabase' : 'Offline'),
+                      subtitle: Text(provider.isSystemOnline
+                          ? 'Connected to Supabase'
+                          : 'Offline'),
                     ),
                     if (provider.lastSyncTime != null)
                       ListTile(
@@ -76,9 +86,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     ListTile(
                       leading: const Icon(Icons.event_seat),
                       title: const Text('Total Seats'),
-                      subtitle: Text('Currently: ${status?.totalSeats ?? 0} seats'),
+                      subtitle:
+                          Text('Currently: ${status?.totalSeats ?? 0} seats'),
                       trailing: TextButton(
-                        onPressed: () => _showUpdateSeatsDialog(context, provider, status?.totalSeats ?? 100),
+                        onPressed: () => _showUpdateSeatsDialog(
+                            context, provider, status?.totalSeats ?? 100),
                         child: const Text('Update'),
                       ),
                     ),
@@ -86,16 +98,20 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     ListTile(
                       leading: const Icon(Icons.people),
                       title: const Text('Current Occupancy'),
-                      subtitle: Text('${status?.occupiedSeats ?? 0} students inside'),
+                      subtitle: Text(
+                          '${provider.studentsInside.length} students inside'),
                       trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          '${status?.occupancyPercentage ?? 0}%',
-                          style: TextStyle(color: AppTheme.primaryBlue, fontWeight: FontWeight.bold),
+                          '${(status?.occupancyPercentage ?? 0).toStringAsFixed(3)}%',
+                          style: const TextStyle(
+                              color: AppTheme.primaryBlue,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -111,21 +127,25 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   iconColor: AppTheme.accentAmber,
                   children: [
                     ListTile(
-                      leading: Icon(Icons.refresh, color: AppTheme.primaryBlue),
+                      leading: const Icon(Icons.refresh,
+                          color: AppTheme.primaryBlue),
                       title: const Text('Refresh Data'),
                       subtitle: const Text('Update all library information'),
                       onTap: () async {
                         await provider.fetchAllData();
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Data refreshed'), backgroundColor: AppTheme.accentGreen),
+                            const SnackBar(
+                                content: Text('Data refreshed'),
+                                backgroundColor: AppTheme.accentGreen),
                           );
                         }
                       },
                     ),
                     const Divider(),
                     ListTile(
-                      leading: Icon(Icons.restore, color: AppTheme.accentAmber),
+                      leading: const Icon(Icons.restore,
+                          color: AppTheme.accentAmber),
                       title: const Text('Reset System'),
                       subtitle: const Text('Mark all students as OUTSIDE'),
                       onTap: () => _showResetDialog(context, provider),
@@ -133,15 +153,20 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                     const Divider(),
                     ListTile(
                       leading: _isClearing
-                          ? SizedBox(
+                          ? const SizedBox(
                               width: 24,
                               height: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.accentRed),
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: AppTheme.accentRed),
                             )
-                          : Icon(Icons.delete_forever, color: AppTheme.accentRed),
+                          : const Icon(Icons.delete_forever,
+                              color: AppTheme.accentRed),
                       title: const Text('Clear All Data'),
-                      subtitle: const Text('Delete all students and logs (DANGER!)'),
-                      onTap: _isClearing ? null : () => _showClearAllDialog(context, provider),
+                      subtitle:
+                          const Text('Delete all students and logs (DANGER!)'),
+                      onTap: _isClearing
+                          ? null
+                          : () => _showClearAllDialog(context, provider),
                     ),
                   ],
                 ),
@@ -156,7 +181,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   children: [
                     _buildInfoRow('Version', '1.0.0'),
                     _buildInfoRow('Database', 'Supabase PostgreSQL'),
-                    _buildInfoRow('API Status', provider.isSystemOnline ? 'Online' : 'Offline'),
+                    _buildInfoRow('API Status',
+                        provider.isSystemOnline ? 'Online' : 'Offline'),
                   ],
                 ),
 
@@ -173,7 +199,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       backgroundColor: AppTheme.accentRed,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                   ),
                 ),
@@ -204,7 +231,10 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary),
                 ),
               ],
             ),
@@ -223,13 +253,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: TextStyle(color: AppTheme.textSecondary)),
-          Text(value, style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w500)),
+          Text(value,
+              style: TextStyle(
+                  color: AppTheme.textPrimary, fontWeight: FontWeight.w500)),
         ],
       ),
     );
   }
 
-  void _showUpdateSeatsDialog(BuildContext context, LibraryProvider provider, int currentSeats) {
+  void _showUpdateSeatsDialog(
+      BuildContext context, LibraryProvider provider, int currentSeats) {
     _seatsController.text = currentSeats.toString();
 
     showDialog(
@@ -246,22 +279,29 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           keyboardType: TextInputType.number,
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               final seats = int.tryParse(_seatsController.text.trim());
               if (seats == null || seats <= 0) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please enter a valid number'), backgroundColor: AppTheme.accentRed),
+                  const SnackBar(
+                      content: Text('Please enter a valid number'),
+                      backgroundColor: AppTheme.accentRed),
                 );
                 return;
               }
 
               Navigator.pop(context);
-              final success = await provider.updateLibrarySettings(totalSeats: seats);
+              final success =
+                  await provider.updateLibrarySettings(totalSeats: seats);
               if (success && mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Total seats updated to $seats'), backgroundColor: AppTheme.accentGreen),
+                  SnackBar(
+                      content: Text('Total seats updated to $seats'),
+                      backgroundColor: AppTheme.accentGreen),
                 );
               }
             },
@@ -285,7 +325,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           'Student records will be preserved.\n\nAre you sure?',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -293,18 +335,23 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 await provider.resetSystem();
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('System reset successfully'), backgroundColor: AppTheme.accentGreen),
+                    const SnackBar(
+                        content: Text('System reset successfully'),
+                        backgroundColor: AppTheme.accentGreen),
                   );
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Reset failed: $e'), backgroundColor: AppTheme.accentRed),
+                    SnackBar(
+                        content: Text('Reset failed: $e'),
+                        backgroundColor: AppTheme.accentRed),
                   );
                 }
               }
             },
-            child: Text('Reset', style: TextStyle(color: AppTheme.accentAmber)),
+            child: const Text('Reset',
+                style: TextStyle(color: AppTheme.accentAmber)),
           ),
         ],
       ),
@@ -315,11 +362,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.warning, color: AppTheme.accentRed),
-            const SizedBox(width: 8),
-            const Text('DANGER!'),
+            SizedBox(width: 8),
+            Text('DANGER!'),
           ],
         ),
         content: const Text(
@@ -329,9 +376,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           'This action CANNOT be undone!\n\nAre you absolutely sure?',
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentRed, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentRed,
+                foregroundColor: Colors.white),
             onPressed: () async {
               Navigator.pop(context);
               setState(() => _isClearing = true);
@@ -340,7 +391,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 final success = await provider.clearAllData();
                 if (success && mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('All data cleared'), backgroundColor: AppTheme.accentGreen),
+                    const SnackBar(
+                        content: Text('All data cleared'),
+                        backgroundColor: AppTheme.accentGreen),
                   );
                 }
               } finally {
@@ -361,7 +414,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
