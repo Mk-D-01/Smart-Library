@@ -5,6 +5,7 @@ import '../models/library_status.dart';
 import '../models/student.dart';
 import '../models/scan_response.dart';
 import '../models/scan_log.dart';
+import '../models/seat_map.dart';
 
 class ApiService {
   final String baseUrl = ApiConfig.baseUrl;
@@ -137,6 +138,25 @@ class ApiService {
       }
     } catch (e) {
       return null;
+    }
+  }
+
+  // GET Seat Map
+  Future<SeatMap> getSeatMap() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl${ApiConfig.seats}'))
+          .timeout(ApiConfig.timeout);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> body = json.decode(response.body);
+        final data = body['data'] ?? body;
+        return SeatMap.fromJson(data);
+      } else {
+        throw Exception('Failed to load seat map');
+      }
+    } catch (e) {
+      throw Exception('Network error: $e');
     }
   }
 }

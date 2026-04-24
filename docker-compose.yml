@@ -6,6 +6,8 @@ services:
     image: smart-library-backend:latest
     ports:
       - "3000:3000"
+    env_file:
+      - ./backend/.env
     environment:
       - NODE_ENV=development
       - PORT=3000
