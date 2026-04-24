@@ -5,6 +5,14 @@ export interface Student {
   current_status: 'INSIDE' | 'OUTSIDE';
   scan_count: number;
   created_at: string;
+  updated_at?: string;
+  // New fields for degree tracking and access expiry
+  degree?: string; // 'BTech', 'MBA', 'BBA', 'BPharma', etc.
+  admission_date?: string; // ISO date format
+  access_expiry_date?: string; // ISO date format - calculated from degree + admission_date
+  phone?: string;
+  semester?: number;
+  is_active?: boolean;
 }
 
 export interface ScanLog {
