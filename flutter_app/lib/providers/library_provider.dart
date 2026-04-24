@@ -36,6 +36,25 @@ class LibraryProvider with ChangeNotifier {
   String? get lastSyncTime =>
       _lastSync != null ? DateFormat('MMM d, h:mm a').format(_lastSync!) : null;
 
+  // Sync library status from ground truth (_studentsInside)
+  void _syncLibraryStatus() {
+    final totalSeats = _libraryStatus?.totalSeats ?? 100;
+    final occupiedSeats = _studentsInside.length;
+    final availableSeats = totalSeats - occupiedSeats;
+    final occupancyPercentage =
+        totalSeats > 0 ? (occupiedSeats / totalSeats) * 100 : 0.0;
+
+    _libraryStatus = LibraryStatus(
+      totalSeats: totalSeats,
+      occupiedSeats: occupiedSeats,
+      availableSeats: availableSeats,
+      occupancyPercentage: occupancyPercentage,
+    );
+
+    debugPrint(
+        '[LibraryProvider] _syncLibraryStatus -> studentsInside: $occupiedSeats, available: $availableSeats, occupancy: ${occupancyPercentage.toStringAsFixed(1)}%');
+  }
+
   // Initialize
   Future<void> initialize({String? studentId}) async {
     await fetchAllData(studentId: studentId);
@@ -89,6 +108,7 @@ class LibraryProvider with ChangeNotifier {
   Future<void> fetchLibraryStatus() async {
     try {
       _libraryStatus = await _supabase.getLibraryStatus();
+      _syncLibraryStatus(); // Ensure status matches ground truth
       _isSystemOnline = true;
       notifyListeners();
     } catch (e) {
@@ -103,6 +123,9 @@ class LibraryProvider with ChangeNotifier {
   Future<void> fetchStudentsInside() async {
     try {
       _studentsInside = await _supabase.getStudentsInside();
+      _syncLibraryStatus(); // Recalculate status from ground truth
+      debugPrint(
+          '[LibraryProvider] fetchStudentsInside -> count: ${_studentsInside.length}');
       notifyListeners();
     } catch (e) {
       _error = 'Failed to fetch students';
@@ -248,6 +271,13 @@ class LibraryProvider with ChangeNotifier {
   /// Delete a student (admin only)
   Future<bool> deleteStudent(String studentId) async {
     try {
+      // Optimistically remove from local state for instant UI sync
+      _studentsInside.removeWhere((s) => s.id == studentId);
+      _syncLibraryStatus();
+      debugPrint(
+          '[LibraryProvider] deleteStudent -> removed $studentId locally, count: ${_studentsInside.length}');
+      notifyListeners();
+
       final success = await _supabase.deleteStudent(studentId);
       if (success) {
         await fetchAllData();
@@ -263,6 +293,13 @@ class LibraryProvider with ChangeNotifier {
   Future<bool> forceExitStudent(String studentId,
       {String studentName = 'Unknown'}) async {
     try {
+      // Optimistically remove from local state for instant UI sync
+      _studentsInside.removeWhere((s) => s.id == studentId);
+      _syncLibraryStatus();
+      debugPrint(
+          '[LibraryProvider] forceExitStudent -> removed $studentId locally, count: ${_studentsInside.length}');
+      notifyListeners();
+
       final supabase = Supabase.instance.client;
 
       final student = await _supabase.getStudent(studentId);

@@ -12,7 +12,7 @@ class StudentHomeScreen extends StatefulWidget {
   State<StudentHomeScreen> createState() => _StudentHomeScreenState();
 }
 
-class _StudentHomeScreenState extends State<StudentHomeScreen> 
+class _StudentHomeScreenState extends State<StudentHomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -20,12 +20,13 @@ class _StudentHomeScreenState extends State<StudentHomeScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
+
     // Initialize library provider with student ID for personalized data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final studentId = authProvider.currentUser?.id;
-      Provider.of<LibraryProvider>(context, listen: false).initialize(studentId: studentId);
+      Provider.of<LibraryProvider>(context, listen: false)
+          .initialize(studentId: studentId);
     });
   }
 
@@ -63,13 +64,17 @@ class _StudentHomeScreenState extends State<StudentHomeScreen>
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [AppTheme.primaryBlue, AppTheme.primaryBlue.withValues(alpha: 0.8)],
+                          colors: [
+                            AppTheme.primaryBlue,
+                            AppTheme.primaryBlue.withValues(alpha: 0.8)
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 20),
+                      child: const Icon(Icons.menu_book_rounded,
+                          color: Colors.white, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -103,7 +108,8 @@ class _StudentHomeScreenState extends State<StudentHomeScreen>
                           ),
                           child: IconButton(
                             onPressed: () => _showLogoutDialog(context),
-                            icon: Icon(Icons.logout_rounded, color: AppTheme.accentRed, size: 20),
+                            icon: const Icon(Icons.logout_rounded,
+                                color: AppTheme.accentRed, size: 20),
                             tooltip: 'Logout',
                           ),
                         );
@@ -113,7 +119,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen>
                 ),
               ),
             ),
-            
+
             // Content
             Expanded(
               child: TabBarView(
@@ -125,7 +131,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen>
                 ],
               ),
             ),
-            
+
             // Bottom Navigation
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -148,8 +154,10 @@ class _StudentHomeScreenState extends State<StudentHomeScreen>
                   indicatorWeight: 3,
                   labelColor: AppTheme.primaryBlue,
                   unselectedLabelColor: AppTheme.textSecondary,
-                  labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                  unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                  labelStyle: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w600),
+                  unselectedLabelStyle: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.w500),
                   tabs: const [
                     Tab(
                       icon: Icon(Icons.dashboard_rounded),
@@ -308,7 +316,7 @@ class DashboardTab extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Main Status Card with visual indicator
                 Container(
                   width: double.infinity,
@@ -320,8 +328,14 @@ class DashboardTab extends StatelessWidget {
                       colors: status.occupancyPercentage >= 80
                           ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
                           : status.occupancyPercentage >= 50
-                              ? [const Color(0xFFF59E0B), const Color(0xFFD97706)]
-                              : [const Color(0xFF10B981), const Color(0xFF059669)],
+                              ? [
+                                  const Color(0xFFF59E0B),
+                                  const Color(0xFFD97706)
+                                ]
+                              : [
+                                  const Color(0xFF10B981),
+                                  const Color(0xFF059669)
+                                ],
                     ),
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
@@ -342,7 +356,8 @@ class DashboardTab extends StatelessWidget {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 8),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(20),
@@ -358,7 +373,8 @@ class DashboardTab extends StatelessWidget {
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.white.withValues(alpha: 0.6),
+                                        color:
+                                            Colors.white.withValues(alpha: 0.6),
                                         blurRadius: 6,
                                       ),
                                     ],
@@ -396,7 +412,7 @@ class DashboardTab extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Circular Progress Indicator
                       SizedBox(
                         width: 140,
@@ -410,20 +426,24 @@ class DashboardTab extends StatelessWidget {
                               child: CircularProgressIndicator(
                                 value: status.occupancyPercentage / 100,
                                 strokeWidth: 12,
-                                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                backgroundColor:
+                                    Colors.white.withValues(alpha: 0.2),
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                    Colors.white),
                                 strokeCap: StrokeCap.round,
                               ),
                             ),
                             Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  '${status.occupancyPercentage.toStringAsFixed(0)}%',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.bold,
+                                FittedBox(
+                                  child: Text(
+                                    '${status.occupancyPercentage.toStringAsFixed(3)}%',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                                 const Text(
@@ -440,10 +460,11 @@ class DashboardTab extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      
+
                       // Available seats highlight
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(16),
@@ -472,7 +493,7 @@ class DashboardTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-              
+
                 // Stats Section Title
                 Text(
                   'Quick Stats',
@@ -483,7 +504,7 @@ class DashboardTab extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Stats Grid
                 GridView.count(
                   shrinkWrap: true,
@@ -503,7 +524,7 @@ class DashboardTab extends StatelessWidget {
                     _buildStatCard(
                       context,
                       'Occupied',
-                      '${status.occupiedSeats}',
+                      '${provider.studentsInside.length}',
                       Icons.person_rounded,
                       AppTheme.accentAmber,
                     ),
@@ -532,7 +553,8 @@ class DashboardTab extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(BuildContext context, String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(BuildContext context, String title, String value,
+      IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -598,8 +620,9 @@ class HistoryTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
+                const CircularProgressIndicator(
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -623,7 +646,7 @@ class HistoryTab extends StatelessWidget {
                     color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.history_rounded,
                     size: 48,
                     color: AppTheme.primaryBlue,
@@ -681,16 +704,18 @@ class HistoryTab extends StatelessWidget {
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppTheme.primaryBlue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.sync_rounded, size: 14, color: AppTheme.primaryBlue),
-                        const SizedBox(width: 6),
+                        Icon(Icons.sync_rounded,
+                            size: 14, color: AppTheme.primaryBlue),
+                        SizedBox(width: 6),
                         Text(
                           'Live',
                           style: TextStyle(
@@ -705,7 +730,7 @@ class HistoryTab extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             // List
             Expanded(
               child: ListView.builder(
@@ -714,7 +739,7 @@ class HistoryTab extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final log = logs[index];
                   final isEntry = log.isEntry;
-                  
+
                   return Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     decoration: BoxDecoration(
@@ -729,15 +754,22 @@ class HistoryTab extends StatelessWidget {
                       ],
                     ),
                     child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       leading: Container(
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: isEntry
-                                ? [AppTheme.accentGreen, AppTheme.accentGreen.withValues(alpha: 0.7)]
-                                : [AppTheme.accentRed, AppTheme.accentRed.withValues(alpha: 0.7)],
+                                ? [
+                                    AppTheme.accentGreen,
+                                    AppTheme.accentGreen.withValues(alpha: 0.7)
+                                  ]
+                                : [
+                                    AppTheme.accentRed,
+                                    AppTheme.accentRed.withValues(alpha: 0.7)
+                                  ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -762,7 +794,8 @@ class HistoryTab extends StatelessWidget {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: isEntry
                                   ? AppTheme.accentGreen.withValues(alpha: 0.1)
@@ -774,7 +807,9 @@ class HistoryTab extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: isEntry ? AppTheme.accentGreen : AppTheme.accentRed,
+                                color: isEntry
+                                    ? AppTheme.accentGreen
+                                    : AppTheme.accentRed,
                               ),
                             ),
                           ),
@@ -784,7 +819,8 @@ class HistoryTab extends StatelessWidget {
                         padding: const EdgeInsets.only(top: 4),
                         child: Row(
                           children: [
-                            Icon(Icons.schedule_rounded, size: 14, color: AppTheme.textSecondary),
+                            Icon(Icons.schedule_rounded,
+                                size: 14, color: AppTheme.textSecondary),
                             const SizedBox(width: 4),
                             Text(
                               log.relativeTime,
@@ -798,7 +834,8 @@ class HistoryTab extends StatelessWidget {
                               log.formattedTime,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.textSecondary.withValues(alpha: 0.7),
+                                color: AppTheme.textSecondary
+                                    .withValues(alpha: 0.7),
                               ),
                             ),
                           ],
@@ -833,14 +870,17 @@ class ProfileTab extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 20),
-              
+
               // Profile Header Card
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppTheme.primaryBlue, AppTheme.primaryBlue.withValues(alpha: 0.8)],
+                    colors: [
+                      AppTheme.primaryBlue,
+                      AppTheme.primaryBlue.withValues(alpha: 0.8)
+                    ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -879,9 +919,9 @@ class ProfileTab extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Name/Title
-                    Text(
+                    const Text(
                       'Student',
                       style: TextStyle(
                         fontSize: 22,
@@ -890,10 +930,11 @@ class ProfileTab extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    
+
                     // ID Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
@@ -901,11 +942,12 @@ class ProfileTab extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.badge_rounded, size: 16, color: Colors.white70),
+                          const Icon(Icons.badge_rounded,
+                              size: 16, color: Colors.white70),
                           const SizedBox(width: 6),
                           Text(
                             user.id,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
@@ -918,7 +960,7 @@ class ProfileTab extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               // Info Cards
               _buildInfoTile(
                 icon: Icons.person_rounded,
@@ -938,9 +980,9 @@ class ProfileTab extends StatelessWidget {
                 value: 'Granted',
                 color: AppTheme.accentGreen,
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Settings Section Header
               Align(
                 alignment: Alignment.centerLeft,
@@ -956,7 +998,7 @@ class ProfileTab extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               // Dark Mode Toggle
               Container(
                 padding: const EdgeInsets.all(16),
@@ -980,7 +1022,9 @@ class ProfileTab extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
-                        themeProvider.isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                        themeProvider.isDarkMode
+                            ? Icons.dark_mode_rounded
+                            : Icons.light_mode_rounded,
                         color: AppTheme.primaryBlue,
                         size: 22,
                       ),
@@ -1014,15 +1058,16 @@ class ProfileTab extends StatelessWidget {
                       onChanged: (value) {
                         themeProvider.setDarkMode(value);
                       },
-                      activeTrackColor: AppTheme.primaryBlue.withValues(alpha: 0.5),
+                      activeTrackColor:
+                          AppTheme.primaryBlue.withValues(alpha: 0.5),
                       activeThumbColor: AppTheme.primaryBlue,
                     ),
                   ],
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Logout Button
               SizedBox(
                 width: double.infinity,
@@ -1105,7 +1150,8 @@ class ProfileTab extends StatelessWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_right_rounded, color: AppTheme.textSecondary.withValues(alpha: 0.5)),
+          Icon(Icons.chevron_right_rounded,
+              color: AppTheme.textSecondary.withValues(alpha: 0.5)),
         ],
       ),
     );

@@ -1,30 +1,11 @@
-# Fix Supabase Students Table 'updated_at' Column Error (PGRST204)
+# Fix Inconsistent Student Count - TODO
 
-## Steps:
-
-### 1. [DB ADMIN] Add missing column to Supabase (User executes)
-```
-Run in Supabase Dashboard > SQL Editor:
-ALTER TABLE public.students ADD COLUMN updated_at timestamptz DEFAULT now() NOT NULL;
-```
-- Refresh schema cache: Dashboard > API > Settings > Refresh RPC/Schema cache
-- Optional: Verify RLS policies enabled for 'students' table
-- Test: Manual query `select * from students where id=eq.21510014144;`
-
-### 2. [CODE] Update supabase_service.dart for robustness\n- Remove explicit `updated_at` sets in UPDATEs (use DB default)\n- ✅ **COMPLETED**: Removed from 5 locations (upsertStudent, processScan, resetSystem, addStudent, updateStudentName)
-
-### 3. [TEST] Verify fix
-```
-cd flutter_app
-flutter clean
-flutter pub get
-flutter run
-```
-- Test scan ID: 21510014144 → No PGRST204 error
-- Check: Students inside list, scan logs, real-time updates
-
-### 4. [COMPLETE] Mark done
-- Remove this TODO.md or mark [x]
-
-**Status: AWAITING DB FIX → Code edit → Test**
+- [x] Create plan and get approval
+- [x] Update `library_provider.dart` - Add `_syncLibraryStatus()`, fix delete/exit logic, add debug logs
+- [x] Update `admin_dashboard_screen.dart` - Fix Occupied/Available stat cards
+- [x] Update `admin_controls_screen.dart` - Fix Occupied/Available cards
+- [x] Update `student_dashboard_screen.dart` - Fix Occupied quick-stat
+- [x] Update `student_home_screen.dart` - Fix DashboardTab Occupied stat
+- [x] Update `admin_settings_screen.dart` - Fix Current Occupancy
+- [x] Verify all screens use `provider.studentsInside.length`
 

@@ -292,14 +292,14 @@ class OverviewTab extends StatelessWidget {
                   _buildStatCard(
                     context,
                     'Occupied',
-                    '${status.occupiedSeats}',
+                    '${provider.studentsInside.length}',
                     Icons.person,
                     AppTheme.accentAmber,
                   ),
                   _buildStatCard(
                     context,
                     'Available',
-                    '${status.availableSeats}',
+                    '${status.totalSeats - provider.studentsInside.length}',
                     Icons.check_circle,
                     AppTheme.accentGreen,
                   ),

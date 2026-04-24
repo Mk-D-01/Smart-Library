@@ -19,7 +19,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final studentId = authProvider.currentUser?.id;
-      Provider.of<LibraryProvider>(context, listen: false).initialize(studentId: studentId);
+      Provider.of<LibraryProvider>(context, listen: false)
+          .initialize(studentId: studentId);
     });
   }
 
@@ -57,13 +58,17 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppTheme.primaryBlue, AppTheme.primaryBlue.withValues(alpha: 0.8)],
+                colors: [
+                  AppTheme.primaryBlue,
+                  AppTheme.primaryBlue.withValues(alpha: 0.8)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.menu_book_rounded, color: Colors.white, size: 20),
+            child: const Icon(Icons.menu_book_rounded,
+                color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -97,7 +102,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 ),
                 child: IconButton(
                   onPressed: () => _showLogoutDialog(context),
-                  icon: Icon(Icons.logout_rounded, color: AppTheme.accentRed, size: 20),
+                  icon: const Icon(Icons.logout_rounded,
+                      color: AppTheme.accentRed, size: 20),
                   tooltip: 'Logout',
                 ),
               );
@@ -143,7 +149,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.cloud_off_rounded, size: 64, color: AppTheme.textTertiary),
+                Icon(Icons.cloud_off_rounded,
+                    size: 64, color: AppTheme.textTertiary),
                 const SizedBox(height: 16),
                 Text(
                   'No data available',
@@ -187,7 +194,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                           const SizedBox(height: 4),
                           Text(
                             'Real-time availability',
-                            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                            style: TextStyle(
+                                fontSize: 14, color: AppTheme.textSecondary),
                           ),
                         ],
                       ),
@@ -218,17 +226,34 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: _buildStatCard('Total Seats', '${status.totalSeats}', Icons.event_seat_rounded, AppTheme.primaryBlue)),
+                    Expanded(
+                        child: _buildStatCard(
+                            'Total Seats',
+                            '${status.totalSeats}',
+                            Icons.event_seat_rounded,
+                            AppTheme.primaryBlue)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildStatCard('Occupied', '${status.occupiedSeats}', Icons.person_rounded, AppTheme.accentAmber)),
+                    Expanded(
+                        child: _buildStatCard(
+                            'Occupied',
+                            '${provider.studentsInside.length}',
+                            Icons.person_rounded,
+                            AppTheme.accentAmber)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: _buildStatCard('Available', '${status.availableSeats}', Icons.check_circle_rounded, AppTheme.accentGreen)),
+                    Expanded(
+                        child: _buildStatCard(
+                            'Available',
+                            '${status.availableSeats}',
+                            Icons.check_circle_rounded,
+                            AppTheme.accentGreen)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildStatCard('Status', status.statusText, Icons.info_rounded, AppTheme.primaryBlue)),
+                    Expanded(
+                        child: _buildStatCard('Status', status.statusText,
+                            Icons.info_rounded, AppTheme.primaryBlue)),
                   ],
                 ),
               ],
@@ -270,7 +295,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -303,7 +329,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 24),
+                child: const Icon(Icons.check_circle_rounded,
+                    color: Colors.white, size: 24),
               ),
             ],
           ),
@@ -321,19 +348,22 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                     value: status.occupancyPercentage / 100,
                     strokeWidth: 12,
                     backgroundColor: Colors.white.withValues(alpha: 0.2),
-                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 ),
                 Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        '${status.occupancyPercentage}%',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
+                      FittedBox(
+                        child: Text(
+                          '${status.occupancyPercentage.toStringAsFixed(3)}%',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       const Text(
@@ -359,7 +389,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.event_seat_rounded, color: Colors.white, size: 20),
+                const Icon(Icons.event_seat_rounded,
+                    color: Colors.white, size: 20),
                 const SizedBox(width: 10),
                 Text(
                   '${status.availableSeats} seats available',
@@ -377,7 +408,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

@@ -46,7 +46,7 @@ class _AdminControlsScreenState extends State<AdminControlsScreen> {
     return Consumer<LibraryProvider>(
       builder: (context, libraryProvider, child) {
         final status = libraryProvider.libraryStatus;
-        
+
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.all(20),
@@ -91,7 +91,7 @@ class _AdminControlsScreenState extends State<AdminControlsScreen> {
                   Expanded(
                     child: _buildStatusCard(
                       'Occupied',
-                      '${status?.occupiedSeats ?? 0}',
+                      '${libraryProvider.studentsInside.length}',
                       Icons.person,
                       Colors.white,
                     ),
@@ -100,7 +100,7 @@ class _AdminControlsScreenState extends State<AdminControlsScreen> {
                   Expanded(
                     child: _buildStatusCard(
                       'Available',
-                      '${status?.availableSeats ?? 0}',
+                      '${(status?.totalSeats ?? 0) - libraryProvider.studentsInside.length}',
                       Icons.event_available,
                       Colors.white,
                     ),
@@ -115,7 +115,7 @@ class _AdminControlsScreenState extends State<AdminControlsScreen> {
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
@@ -123,8 +123,8 @@ class _AdminControlsScreenState extends State<AdminControlsScreen> {
                       color: Colors.green,
                       size: 12,
                     ),
-                    const SizedBox(width: 8),
-                    const Text(
+                    SizedBox(width: 8),
+                    Text(
                       'System Online',
                       style: TextStyle(
                         color: Colors.white,
@@ -141,7 +141,8 @@ class _AdminControlsScreenState extends State<AdminControlsScreen> {
     );
   }
 
-  Widget _buildStatusCard(String label, String value, IconData icon, Color color) {
+  Widget _buildStatusCard(
+      String label, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -185,7 +186,7 @@ class _AdminControlsScreenState extends State<AdminControlsScreen> {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.settings_applications,
                 color: AppTheme.primaryBlue,
                 size: 24,
@@ -246,7 +247,7 @@ class _AdminControlsScreenState extends State<AdminControlsScreen> {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.storage,
                 color: AppTheme.primaryBlue,
                 size: 24,
@@ -307,7 +308,7 @@ class _AdminControlsScreenState extends State<AdminControlsScreen> {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.info,
                 color: AppTheme.primaryBlue,
                 size: 24,
@@ -475,10 +476,11 @@ class _AdminControlsScreenState extends State<AdminControlsScreen> {
     try {
       // TODO: Implement actual reset API call
       await Future.delayed(const Duration(seconds: 3));
-      
+
       if (mounted) {
         _showSuccess('System reset successfully');
-        Provider.of<LibraryProvider>(context, listen: false).fetchLibraryStatus();
+        Provider.of<LibraryProvider>(context, listen: false)
+            .fetchLibraryStatus();
       }
     } catch (e) {
       _showError('Failed to reset system');

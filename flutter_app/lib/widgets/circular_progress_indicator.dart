@@ -70,12 +70,14 @@ class CustomCircularProgress extends StatelessWidget {
             Center(child: child!)
           else
             Center(
-              child: Text(
-                '${(progress * 100).toInt()}%',
-                style: TextStyle(
-                  fontSize: size * 0.15,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textPrimary,
+              child: FittedBox(
+                child: Text(
+                  '${(progress * 100).toStringAsFixed(3)}%',
+                  style: TextStyle(
+                    fontSize: size * 0.15,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
               ),
             ),
@@ -121,7 +123,7 @@ class _CircularProgressPainter extends CustomPainter {
   @override
   bool shouldRepaint(_CircularProgressPainter oldDelegate) {
     return oldDelegate.progress != progress ||
-           oldDelegate.strokeWidth != strokeWidth ||
-           oldDelegate.color != color;
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.color != color;
   }
 }
