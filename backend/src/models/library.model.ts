@@ -1,5 +1,6 @@
 import db, { initializeDatabase as initDB } from '../config/database';
 import { Student, ScanLog, LibraryConfig, LibraryStatus } from '../types/library.types';
+import { isAccessExpired } from '../utils/access_expiry';
 
 export { initDB as initializeDatabase };
 
@@ -285,6 +286,41 @@ export const getScanLogs = async (
   } catch (error) {
     console.error('Error in getScanLogs:', error);
     return [];
+  }
+};
+
+// Validate student access (check if not expired)
+export const validateStudentAccess = async (studentId: string): Promise<{ valid: boolean; reason?: string }> => {
+  try {
+    const student = await getStudent(studentId);
+    
+    if (!student) {
+      return { valid: false, reason: 'Student not found' };
+    }
+
+    // Check if student is active
+    if (student.is_active === false) {
+      return { valid: false, reason: 'Student account is deactivated' };
+    }
+
+    // If no expiry date set, allow access
+    if (!student.access_expiry_date) {
+      return { valid: true };
+    }
+
+    // Check if access has expired
+    if (isAccessExpired(student.access_expiry_date)) {
+      return { 
+        valid: false, 
+        reason: `Your library access expired on ${student.access_expiry_date}. Please contact the administration.`
+      };
+    }
+
+    return { valid: true };
+  } catch (error) {
+    console.error(`Error validating student access for ${studentId}:`, error);
+    // Default to allowing access if validation fails
+    return { valid: true };
   }
 };
 
