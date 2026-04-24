@@ -36,6 +36,7 @@ app.get('/', (_req: Request, res: Response) => {
       scan: '/api/scan',
       studentsInside: '/api/students-inside',
       scanLogs: '/api/scan-logs',
+      seats: '/api/seats',
       health: '/api/health'
     },
   });

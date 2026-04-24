@@ -195,3 +195,66 @@ export const resetSystem = async (_req: Request, res: Response) => {
     });
   }
 };
+
+// Generate seat map pictograph data
+export const getSeatMap = async (_req: Request, res: Response) => {
+  try {
+    // Get library config for total seats
+    const status = await getLibraryStatus();
+    const totalSeats = status?.totalSeats || 100;
+    
+    // Get students currently inside
+    const students = await getAllStudentsInside();
+    
+    // Generate seat grid (10x10 for 100 seats, or adjust based on total)
+    const cols = 10;
+    const rows = Math.ceil(totalSeats / cols);
+    
+    const seats = [];
+    let seatNumber = 1;
+    
+    for (let row = 0; row < rows; row++) {
+      const rowSeats = [];
+      for (let col = 0; col < cols; col++) {
+        if (seatNumber <= totalSeats) {
+          // Assign student to seat if available
+          const studentIndex = seatNumber - 1;
+          const student = studentIndex < students.length ? students[studentIndex] : null;
+          
+          rowSeats.push({
+            id: seatNumber,
+            row: row + 1,
+            col: col + 1,
+            status: student ? 'OCCUPIED' : 'AVAILABLE',
+            student: student ? {
+              id: student.id,
+              name: student.name
+            } : null
+          });
+          seatNumber++;
+        }
+      }
+      seats.push(rowSeats);
+    }
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        seats,
+        totalSeats,
+        occupiedSeats: students.length,
+        availableSeats: totalSeats - students.length,
+        occupancyRate: totalSeats > 0 ? Math.round((students.length / totalSeats) * 100) : 0,
+        rows,
+        cols,
+        lastUpdated: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Error in getSeatMap:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+    });
+  }
+};

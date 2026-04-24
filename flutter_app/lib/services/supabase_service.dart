@@ -4,6 +4,7 @@ import '../config/supabase_config.dart';
 import '../models/library_status.dart';
 import '../models/student.dart';
 import '../models/scan_log.dart';
+import '../models/seat_map.dart';
 
 /// Service for direct Supabase database operations
 class SupabaseService {
@@ -462,6 +463,77 @@ class SupabaseService {
     } catch (e) {
       debugPrint('Error updating library settings: $e');
       return false;
+    }
+  }
+
+  /// Get seat map pictograph data
+  Future<SeatMap> getSeatMap() async {
+    try {
+      // Get library config for total seats
+      final config = await _client
+          .from(SupabaseConfig.libraryConfigTable)
+          .select()
+          .limit(1)
+          .single();
+      
+      final totalSeats = config['total_seats'] ?? 100;
+      
+      // Get students currently inside
+      final students = await getStudentsInside();
+      
+      // Generate seat grid
+      final cols = 10;
+      final rows = (totalSeats / cols).ceil();
+      
+      final List<List<Map<String, dynamic>>> seats = [];
+      int seatNumber = 1;
+      
+      for (int row = 0; row < rows; row++) {
+        final List<Map<String, dynamic>> rowSeats = [];
+        for (int col = 0; col < cols; col++) {
+          if (seatNumber <= totalSeats) {
+            final studentIndex = seatNumber - 1;
+            final student = studentIndex < students.length ? students[studentIndex] : null;
+            
+            rowSeats.add({
+              'id': seatNumber,
+              'row': row + 1,
+              'col': col + 1,
+              'status': student != null ? 'OCCUPIED' : 'AVAILABLE',
+              'student': student != null ? {
+                'id': student.id,
+                'name': student.name,
+              } : null,
+            });
+            seatNumber++;
+          }
+        }
+        seats.add(rowSeats);
+      }
+      
+      return SeatMap.fromJson({
+        'seats': seats,
+        'totalSeats': totalSeats,
+        'occupiedSeats': students.length,
+        'availableSeats': totalSeats - students.length,
+        'occupancyRate': totalSeats > 0 ? ((students.length / totalSeats) * 100).round() : 0,
+        'rows': rows,
+        'cols': cols,
+        'lastUpdated': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('Error getting seat map: $e');
+      // Return default empty seat map
+      return SeatMap.fromJson({
+        'seats': [],
+        'totalSeats': 100,
+        'occupiedSeats': 0,
+        'availableSeats': 100,
+        'occupancyRate': 0,
+        'rows': 10,
+        'cols': 10,
+        'lastUpdated': DateTime.now().toIso8601String(),
+      });
     }
   }
 }

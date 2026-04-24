@@ -6,6 +6,7 @@ import '../models/library_status.dart';
 import '../models/student.dart';
 import '../models/scan_log.dart';
 import '../models/scan_response.dart';
+import '../models/seat_map.dart';
 import '../services/supabase_service.dart';
 
 class LibraryProvider with ChangeNotifier {
@@ -15,6 +16,7 @@ class LibraryProvider with ChangeNotifier {
   List<Student> _studentsInside = [];
   List<ScanLog> _scanLogs = [];
   List<ScanLog> _studentScanLogs = []; // Logs for current logged-in student
+  SeatMap? _seatMap;
   bool _isLoading = false;
   String? _error;
   Timer? _autoRefreshTimer;
@@ -30,6 +32,7 @@ class LibraryProvider with ChangeNotifier {
   List<Student> get studentsInside => _studentsInside;
   List<ScanLog> get scanLogs => _scanLogs;
   List<ScanLog> get studentScanLogs => _studentScanLogs;
+  SeatMap? get seatMap => _seatMap;
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isSystemOnline => _isSystemOnline;
@@ -379,6 +382,20 @@ class LibraryProvider with ChangeNotifier {
     } catch (e) {
       debugPrint('Update settings error: $e');
       return false;
+    }
+  }
+
+  /// Fetch seat map
+  Future<void> fetchSeatMap() async {
+    try {
+      final seatMap = await _supabase.getSeatMap();
+      _seatMap = seatMap;
+      _error = null;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Fetch seat map error: $e');
+      _error = e.toString();
+      notifyListeners();
     }
   }
 

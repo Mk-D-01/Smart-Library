@@ -6,6 +6,7 @@ import '../screens/admin/admin_overview_screen.dart';
 import '../screens/admin/admin_students_screen.dart';
 import '../screens/admin/admin_manual_scanner_screen.dart';
 import '../screens/admin/admin_settings_screen.dart';
+import '../screens/admin/admin_seat_map_screen.dart';
 import '../config/theme_config.dart';
 
 class AppNavigation extends StatefulWidget {
@@ -59,6 +60,11 @@ class _AppNavigationState extends State<AppNavigation> {
         icon: Icons.qr_code_scanner,
         label: 'Scanner',
         screen: const AdminManualScannerScreen(),
+      ),
+      NavigationItem(
+        icon: Icons.chair,
+        label: 'Seats',
+        screen: const AdminSeatMapScreen(),
       ),
       NavigationItem(
         icon: Icons.settings,

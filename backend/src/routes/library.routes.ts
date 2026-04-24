@@ -48,6 +48,21 @@ router.get('/student/:studentId', async (req: Request, res: Response) => {
   }
 });
 
+// Get seat occupancy pictograph
+router.get('/seats', async (req: Request, res: Response) => {
+  try {
+    const { getSeatMap } = await import('../controllers/library.controller');
+    const result = await getSeatMap(req, res);
+    return result;
+  } catch (error) {
+    console.error('Error in /seats:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
 // Reset library (admin function)
 router.post('/reset', resetSystem);
 

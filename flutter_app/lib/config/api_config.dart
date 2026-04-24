@@ -11,6 +11,7 @@ class ApiConfig {
   static const String scan = '/scan';
   static const String studentsInside = '/students-inside';
   static const String scanLogs = '/scan-logs';
+  static const String seats = '/seats';
   static const String reset = '/reset';
   static const String health = '/health';
   
