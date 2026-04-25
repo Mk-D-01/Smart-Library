@@ -21,7 +21,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> initialize() async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       _currentUser = await _storage.getSavedUser();
     } catch (e) {
@@ -34,7 +34,8 @@ class AuthProvider with ChangeNotifier {
   }
 
   // Login
-  Future<bool> login(String userId, UserRole role, {bool rememberMe = true}) async {
+  Future<bool> login(String userId, UserRole role,
+      {bool rememberMe = true}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -61,15 +62,12 @@ class AuthProvider with ChangeNotifier {
           notifyListeners();
           return false;
         }
-        
+
         // Check if student exists or create new one in Supabase
         var student = await _supabaseService.getStudent(userId);
-        
-        if (student == null) {
-          // Create new student in database
-          student = await _supabaseService.upsertStudent(userId);
-        }
-        
+
+        student ??= await _supabaseService.upsertStudent(userId);
+
         _currentUser = User(
           id: userId,
           name: student?.name ?? 'Student $userId',
@@ -78,7 +76,7 @@ class AuthProvider with ChangeNotifier {
       }
 
       await _storage.saveUser(_currentUser!, rememberMe: rememberMe);
-      
+
       _isLoading = false;
       notifyListeners();
       return true;

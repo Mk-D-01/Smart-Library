@@ -475,48 +475,52 @@ class SupabaseService {
           .select()
           .limit(1)
           .single();
-      
+
       final totalSeats = config['total_seats'] ?? 100;
-      
+
       // Get students currently inside
       final students = await getStudentsInside();
-      
+
       // Generate seat grid
-      final cols = 10;
+      const cols = 10;
       final rows = (totalSeats / cols).ceil();
-      
+
       final List<List<Map<String, dynamic>>> seats = [];
       int seatNumber = 1;
-      
+
       for (int row = 0; row < rows; row++) {
         final List<Map<String, dynamic>> rowSeats = [];
         for (int col = 0; col < cols; col++) {
           if (seatNumber <= totalSeats) {
             final studentIndex = seatNumber - 1;
-            final student = studentIndex < students.length ? students[studentIndex] : null;
-            
+            final student =
+                studentIndex < students.length ? students[studentIndex] : null;
+
             rowSeats.add({
               'id': seatNumber,
               'row': row + 1,
               'col': col + 1,
               'status': student != null ? 'OCCUPIED' : 'AVAILABLE',
-              'student': student != null ? {
-                'id': student.id,
-                'name': student.name,
-              } : null,
+              'student': student != null
+                  ? {
+                      'id': student.id,
+                      'name': student.name,
+                    }
+                  : null,
             });
             seatNumber++;
           }
         }
         seats.add(rowSeats);
       }
-      
+
       return SeatMap.fromJson({
         'seats': seats,
         'totalSeats': totalSeats,
         'occupiedSeats': students.length,
         'availableSeats': totalSeats - students.length,
-        'occupancyRate': totalSeats > 0 ? ((students.length / totalSeats) * 100).round() : 0,
+        'occupancyRate':
+            totalSeats > 0 ? ((students.length / totalSeats) * 100).round() : 0,
         'rows': rows,
         'cols': cols,
         'lastUpdated': DateTime.now().toIso8601String(),

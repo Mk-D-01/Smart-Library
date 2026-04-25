@@ -90,7 +90,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           Text('Currently: ${status?.totalSeats ?? 0} seats'),
                       trailing: TextButton(
                         onPressed: () => _showUpdateSeatsDialog(
-                            context, provider, status?.totalSeats ?? 100),
+                            provider, status?.totalSeats ?? 100),
                         child: const Text('Update'),
                       ),
                     ),
@@ -131,16 +131,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           color: AppTheme.primaryBlue),
                       title: const Text('Refresh Data'),
                       subtitle: const Text('Update all library information'),
-                      onTap: () async {
-                        await provider.fetchAllData();
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Data refreshed'),
-                                backgroundColor: AppTheme.accentGreen),
-                          );
-                        }
-                      },
+                      onTap: () => _handleRefresh(provider),
                     ),
                     const Divider(),
                     ListTile(
@@ -148,7 +139,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           color: AppTheme.accentAmber),
                       title: const Text('Reset System'),
                       subtitle: const Text('Mark all students as OUTSIDE'),
-                      onTap: () => _showResetDialog(context, provider),
+                      onTap: () => _showResetDialog(provider),
                     ),
                     const Divider(),
                     ListTile(
@@ -166,7 +157,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                           const Text('Delete all students and logs (DANGER!)'),
                       onTap: _isClearing
                           ? null
-                          : () => _showClearAllDialog(context, provider),
+                          : () => _showClearAllDialog(provider),
                     ),
                   ],
                 ),
@@ -192,7 +183,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _showLogoutDialog(context),
+                    onPressed: () => _showLogoutDialog(),
                     icon: const Icon(Icons.logout),
                     label: const Text('Logout'),
                     style: ElevatedButton.styleFrom(
@@ -209,6 +200,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           );
         },
       ),
+    );
+  }
+
+  Future<void> _handleRefresh(LibraryProvider provider) async {
+    await provider.fetchAllData();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content: Text('Data refreshed'),
+          backgroundColor: AppTheme.accentGreen),
     );
   }
 
@@ -261,13 +262,12 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  void _showUpdateSeatsDialog(
-      BuildContext context, LibraryProvider provider, int currentSeats) {
+  void _showUpdateSeatsDialog(LibraryProvider provider, int currentSeats) {
     _seatsController.text = currentSeats.toString();
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Update Total Seats'),
         content: TextField(
           controller: _seatsController,
@@ -280,13 +280,13 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               final seats = int.tryParse(_seatsController.text.trim());
               if (seats == null || seats <= 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
                   const SnackBar(
                       content: Text('Please enter a valid number'),
                       backgroundColor: AppTheme.accentRed),
@@ -294,16 +294,16 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                 return;
               }
 
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               final success =
                   await provider.updateLibrarySettings(totalSeats: seats);
-              if (success && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text('Total seats updated to $seats'),
-                      backgroundColor: AppTheme.accentGreen),
-                );
-              }
+              if (!mounted) return;
+              if (!success) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content: Text('Total seats updated to $seats'),
+                    backgroundColor: AppTheme.accentGreen),
+              );
             },
             child: const Text('Update'),
           ),
@@ -312,90 +312,59 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  void _showResetDialog(BuildContext context, LibraryProvider provider) {
+  void _showResetDialog(LibraryProvider provider) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Reset System'),
-        content: const Text(
-          'This will:\n\n'
-          '• Mark all students as OUTSIDE\n'
-          '• Reset occupied seats to 0\n'
-          '• Reset all scan counts\n\n'
-          'Student records will be preserved.\n\nAre you sure?',
-        ),
+        content: const Text('This will reset the system to defaults. Continue?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               try {
                 await provider.resetSystem();
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('System reset successfully'),
-                        backgroundColor: AppTheme.accentGreen),
-                  );
-                }
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('System reset successfully'), backgroundColor: AppTheme.accentGreen),
+                );
               } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text('Reset failed: $e'),
-                        backgroundColor: AppTheme.accentRed),
-                  );
-                }
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Reset failed'), backgroundColor: AppTheme.accentRed),
+                );
               }
             },
-            child: const Text('Reset',
-                style: TextStyle(color: AppTheme.accentAmber)),
+            child: const Text('Reset', style: TextStyle(color: AppTheme.accentAmber)),
           ),
         ],
       ),
     );
   }
 
-  void _showClearAllDialog(BuildContext context, LibraryProvider provider) {
+  void _showClearAllDialog(LibraryProvider provider) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.warning, color: AppTheme.accentRed),
-            SizedBox(width: 8),
-            Text('DANGER!'),
-          ],
-        ),
-        content: const Text(
-          'This will PERMANENTLY DELETE:\n\n'
-          '• ALL student records\n'
-          '• ALL scan history\n\n'
-          'This action CANNOT be undone!\n\nAre you absolutely sure?',
-        ),
+      builder: (dialogContext) => AlertDialog(
+        title: const Row(children: [
+          Icon(Icons.warning, color: AppTheme.accentRed), SizedBox(width: 8), Text('DANGER!'),
+        ]),
+        content: const Text('This will PERMANENTLY DELETE all data. This action CANNOT be undone!'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentRed,
-                foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentRed, foregroundColor: Colors.white),
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               setState(() => _isClearing = true);
-
               try {
                 final success = await provider.clearAllData();
-                if (success && mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('All data cleared'),
-                        backgroundColor: AppTheme.accentGreen),
-                  );
-                }
+                if (!mounted) return;
+                if (!success) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('All data cleared'), backgroundColor: AppTheme.accentGreen),
+                );
               } finally {
                 if (mounted) setState(() => _isClearing = false);
               }
@@ -407,19 +376,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               Provider.of<AuthProvider>(context, listen: false).logout();
             },
             child: const Text('Logout'),

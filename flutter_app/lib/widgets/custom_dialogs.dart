@@ -138,7 +138,10 @@ class ErrorDialog extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppTheme.accentRed, AppTheme.accentRed.withValues(alpha: 0.8)],
+                colors: [
+                  AppTheme.accentRed,
+                  AppTheme.accentRed.withValues(alpha: 0.8)
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -249,7 +252,7 @@ class ConfirmDialog extends StatelessWidget {
       ),
       title: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.warning_amber,
             color: AppTheme.accentAmber,
             size: 24,

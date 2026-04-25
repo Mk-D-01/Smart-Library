@@ -166,17 +166,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               Provider.of<AuthProvider>(context, listen: false).logout();
               Navigator.pushReplacementNamed(context, '/login');
             },
@@ -639,10 +639,11 @@ class _StudentsTabState extends State<StudentsTab> {
   void _showAddStudentDialog(BuildContext context, LibraryProvider provider) {
     final idController = TextEditingController();
     final nameController = TextEditingController();
+    final messenger = ScaffoldMessenger.of(context);
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Add New Student'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -671,7 +672,7 @@ class _StudentsTabState extends State<StudentsTab> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
@@ -680,7 +681,7 @@ class _StudentsTabState extends State<StudentsTab> {
               final name = nameController.text.trim();
 
               if (!RegExp(r'^\d{11}$').hasMatch(id)) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
                   const SnackBar(
                     content: Text('Student ID must be exactly 11 digits'),
                     backgroundColor: AppTheme.accentRed,
@@ -689,27 +690,24 @@ class _StudentsTabState extends State<StudentsTab> {
                 return;
               }
 
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
 
               final result = await provider.addStudent(id,
                   name: name.isEmpty ? null : name);
-              if (result != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Student added successfully'),
-                    backgroundColor: AppTheme.accentGreen,
-                  ),
+
+              final message = result != null
+                  ? 'Student added successfully'
+                  : 'Failed to add student. May already exist.';
+              final color = result != null
+                  ? AppTheme.accentGreen
+                  : AppTheme.accentRed;
+              if (mounted) {
+                messenger.showSnackBar(
+                  SnackBar(content: Text(message), backgroundColor: color),
                 );
-                if (_showAllStudents) {
+                if (result != null && _showAllStudents) {
                   _loadAllStudents(provider);
                 }
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Failed to add student. May already exist.'),
-                    backgroundColor: AppTheme.accentRed,
-                  ),
-                );
               }
             },
             child: const Text('Add'),
@@ -721,36 +719,35 @@ class _StudentsTabState extends State<StudentsTab> {
 
   void _confirmDeleteStudent(
       BuildContext context, LibraryProvider provider, String studentId) {
+    final messenger = ScaffoldMessenger.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Student'),
         content: Text(
             'Are you sure you want to delete student $studentId?\n\nThis will also delete all their scan history.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               final success = await provider.deleteStudent(studentId);
-              if (success) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Student deleted successfully'),
-                    backgroundColor: AppTheme.accentGreen,
-                  ),
+              final message = success
+                  ? 'Student deleted successfully'
+                  : 'Failed to delete student';
+              final color = success
+                  ? AppTheme.accentGreen
+                  : AppTheme.accentRed;
+              if (mounted) {
+                messenger.showSnackBar(
+                  SnackBar(content: Text(message), backgroundColor: color),
                 );
-                _loadAllStudents(provider);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Failed to delete student'),
-                    backgroundColor: AppTheme.accentRed,
-                  ),
-                );
+                if (success) {
+                  _loadAllStudents(provider);
+                }
               }
             },
             child: const Text('Delete',

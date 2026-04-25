@@ -181,7 +181,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
             if (!showInsideOnly) ...[
               const SizedBox(width: 8),
               IconButton(
-                icon: Icon(Icons.delete_outline, color: AppTheme.accentRed, size: 20),
+                icon: const Icon(Icons.delete_outline, color: AppTheme.accentRed, size: 20),
                 onPressed: () => _confirmDeleteStudent(context, student.id),
                 tooltip: 'Delete student',
               ),
@@ -208,6 +208,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
   void _showAddStudentDialog(BuildContext context) {
     final idController = TextEditingController();
     final nameController = TextEditingController();
+    final messenger = ScaffoldMessenger.of(context);
 
     showDialog(
       context: context,
@@ -261,23 +262,15 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
               Navigator.pop(context);
               final provider = Provider.of<LibraryProvider>(context, listen: false);
               final result = await provider.addStudent(id, name: name.isEmpty ? null : name);
-              
-              if (result != null && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Student added successfully'),
-                    backgroundColor: AppTheme.accentGreen,
-                  ),
-                );
-                if (_showAllStudents) _loadAllStudents();
-              } else if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Failed to add student. May already exist.'),
-                    backgroundColor: AppTheme.accentRed,
-                  ),
-                );
-              }
+              final message = result == null
+                  ? 'Failed to add student. May already exist.'
+                  : 'Student added successfully';
+              final color = result == null ? AppTheme.accentRed : AppTheme.accentGreen;
+              if (!mounted) return;
+              messenger.showSnackBar(
+                SnackBar(content: Text(message), backgroundColor: color),
+              );
+              if (result != null && _showAllStudents) _loadAllStudents();
             },
             child: const Text('Add'),
           ),
@@ -287,6 +280,7 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
   }
 
   void _confirmDeleteStudent(BuildContext context, String studentId) {
+    final messenger = ScaffoldMessenger.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -302,25 +296,17 @@ class _AdminStudentsScreenState extends State<AdminStudentsScreen> {
               Navigator.pop(context);
               final provider = Provider.of<LibraryProvider>(context, listen: false);
               final success = await provider.deleteStudent(studentId);
-              
-              if (success && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Student deleted successfully'),
-                    backgroundColor: AppTheme.accentGreen,
-                  ),
-                );
-                _loadAllStudents();
-              } else if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Failed to delete student'),
-                    backgroundColor: AppTheme.accentRed,
-                  ),
-                );
-              }
+              final message = success
+                  ? 'Student deleted successfully'
+                  : 'Failed to delete student';
+              final color = success ? AppTheme.accentGreen : AppTheme.accentRed;
+              if (!mounted) return;
+              messenger.showSnackBar(
+                SnackBar(content: Text(message), backgroundColor: color),
+              );
+              if (success) _loadAllStudents();
             },
-            child: Text('Delete', style: TextStyle(color: AppTheme.accentRed)),
+            child: const Text('Delete', style: TextStyle(color: AppTheme.accentRed)),
           ),
         ],
       ),
