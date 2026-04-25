@@ -134,14 +134,14 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
             ),
             child: Column(
               children: [
-                Row(
+                const Row(
                   children: [
                     Icon(
                       Icons.qr_code_scanner,
                       color: AppTheme.primaryBlue,
                       size: 20,
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       'Scan student ID card',
                       style: TextStyle(
@@ -180,7 +180,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.keyboard,
             size: 80,
             color: AppTheme.primaryBlue,
@@ -215,14 +215,14 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
             decoration: InputDecoration(
               labelText: 'Student ID',
               hintText: 'STU001',
-              prefixIcon: Icon(Icons.badge, color: AppTheme.primaryBlue),
+              prefixIcon: const Icon(Icons.badge, color: AppTheme.primaryBlue),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: AppTheme.primaryBlue),
+                borderSide: const BorderSide(color: AppTheme.primaryBlue),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: AppTheme.primaryBlue, width: 2),
+                borderSide: const BorderSide(color: AppTheme.primaryBlue, width: 2),
               ),
               filled: true,
               fillColor: AppTheme.background,
@@ -233,12 +233,15 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: _isScanning ? null : () => _processScan(_manualController.text),
-              icon: _isScanning 
+              onPressed: _isScanning
+                  ? null
+                  : () => _processScan(_manualController.text),
+              icon: _isScanning
                   ? const SizedBox(
-                      width: 20, 
-                      height: 20, 
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.qr_code_scanner),
               label: Text(_isScanning ? 'Processing...' : 'Process Scan'),
@@ -302,7 +305,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
           Consumer<LibraryProvider>(
             builder: (context, libraryProvider, child) {
               final recentLogs = libraryProvider.scanLogs.take(3).toList();
-              
+
               if (recentLogs.isEmpty) {
                 return Container(
                   padding: const EdgeInsets.symmetric(vertical: 20),
@@ -319,7 +322,8 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
               }
 
               return Column(
-                children: recentLogs.map((log) => _buildRecentScanItem(log)).toList(),
+                children:
+                    recentLogs.map((log) => _buildRecentScanItem(log)).toList(),
               );
             },
           ),

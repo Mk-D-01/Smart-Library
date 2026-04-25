@@ -419,20 +419,21 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
   }
 
   Future<void> _showForceExitDialog(Student student) async {
+    final provider = Provider.of<LibraryProvider>(context, listen: false);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Force Exit'),
-        content: Text(
-          'Force exit ${student.name} (${student.id}) from the library?\n\nThis will update their status to OUTSIDE, log an EXIT scan, and decrement occupied seats.',
+        content: const Text(
+          'Force exit  () from the library?\n\nThis will update their status to OUTSIDE, log an EXIT scan, and decrement occupied seats.',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
             child: const Text(
               'Force Exit',
               style: TextStyle(color: AppTheme.accentAmber),
@@ -443,26 +444,20 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
     );
 
     if (confirmed == true) {
-      final provider = Provider.of<LibraryProvider>(context, listen: false);
       final success = await provider.forceExitStudent(student.id,
           studentName: student.name);
-
-      if (success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${student.name} force exited successfully'),
-            backgroundColor: AppTheme.accentGreen,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to force exit student'),
-            backgroundColor: AppTheme.accentRed,
-          ),
-        );
-      }
+      final message = success
+          ? ' force exited successfully'
+          : 'Failed to force exit student';
+      final color = success ? AppTheme.accentGreen : AppTheme.accentRed;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: color,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 

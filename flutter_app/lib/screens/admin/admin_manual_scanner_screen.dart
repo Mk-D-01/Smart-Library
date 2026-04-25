@@ -8,7 +8,8 @@ class AdminManualScannerScreen extends StatefulWidget {
   const AdminManualScannerScreen({super.key});
 
   @override
-  State<AdminManualScannerScreen> createState() => _AdminManualScannerScreenState();
+  State<AdminManualScannerScreen> createState() =>
+      _AdminManualScannerScreenState();
 }
 
 class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
@@ -42,7 +43,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
             // Manual Entry Card
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -50,7 +52,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.keyboard, color: AppTheme.primaryBlue, size: 24),
+                        const Icon(Icons.keyboard,
+                            color: AppTheme.primaryBlue, size: 24),
                         const SizedBox(width: 12),
                         Text(
                           'Manual Entry',
@@ -65,7 +68,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
                     const SizedBox(height: 8),
                     Text(
                       'Enter student ID manually when hardware scanner is unavailable',
-                      style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                      style: TextStyle(
+                          fontSize: 13, color: AppTheme.textSecondary),
                     ),
                     const SizedBox(height: 20),
                     TextField(
@@ -74,7 +78,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
                         labelText: 'Student ID',
                         hintText: 'Enter 11-digit Student ID',
                         prefixIcon: const Icon(Icons.badge),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
                         filled: true,
                         fillColor: AppTheme.background,
                       ),
@@ -91,14 +96,17 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
                               )
                             : const Icon(Icons.qr_code_scanner),
-                        label: Text(_isScanning ? 'Processing...' : 'Process Scan'),
+                        label: Text(
+                            _isScanning ? 'Processing...' : 'Process Scan'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primaryBlue,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
                     ),
@@ -113,7 +121,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
             if (_lastScanResult != null)
               Card(
                 elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
                 color: _wasEntry == true
                     ? AppTheme.accentGreen.withValues(alpha: 0.1)
                     : AppTheme.accentRed.withValues(alpha: 0.1),
@@ -124,7 +133,9 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
                       Icon(
                         _wasEntry == true ? Icons.login : Icons.logout,
                         size: 48,
-                        color: _wasEntry == true ? AppTheme.accentGreen : AppTheme.accentRed,
+                        color: _wasEntry == true
+                            ? AppTheme.accentGreen
+                            : AppTheme.accentRed,
                       ),
                       const SizedBox(height: 12),
                       Text(
@@ -132,13 +143,16 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: _wasEntry == true ? AppTheme.accentGreen : AppTheme.accentRed,
+                          color: _wasEntry == true
+                              ? AppTheme.accentGreen
+                              : AppTheme.accentRed,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         _lastScanResult!,
-                        style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+                        style: TextStyle(
+                            fontSize: 14, color: AppTheme.textSecondary),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -152,10 +166,11 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
             Consumer<LibraryProvider>(
               builder: (context, provider, child) {
                 final recentLogs = provider.scanLogs.take(5).toList();
-                
+
                 return Card(
                   elevation: 1,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -174,7 +189,9 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
                           Center(
                             child: Padding(
                               padding: const EdgeInsets.all(16),
-                              child: Text('No recent scans', style: TextStyle(color: AppTheme.textSecondary)),
+                              child: Text('No recent scans',
+                                  style:
+                                      TextStyle(color: AppTheme.textSecondary)),
                             ),
                           )
                         else
@@ -191,7 +208,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
             // Instructions
             Card(
               elevation: 1,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -199,7 +217,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.info_outline, color: AppTheme.accentAmber, size: 24),
+                        const Icon(Icons.info_outline,
+                            color: AppTheme.accentAmber, size: 24),
                         const SizedBox(width: 12),
                         Text(
                           'How Scanning Works',
@@ -212,10 +231,14 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    _buildInstructionItem('1', 'Single scanner handles both ENTRY and EXIT'),
-                    _buildInstructionItem('2', 'System uses odd/even logic to determine action'),
-                    _buildInstructionItem('3', 'First scan = Entry, Second scan = Exit, and so on'),
-                    _buildInstructionItem('4', 'New students are automatically registered'),
+                    _buildInstructionItem(
+                        '1', 'Single scanner handles both ENTRY and EXIT'),
+                    _buildInstructionItem(
+                        '2', 'System uses odd/even logic to determine action'),
+                    _buildInstructionItem('3',
+                        'First scan = Entry, Second scan = Exit, and so on'),
+                    _buildInstructionItem(
+                        '4', 'New students are automatically registered'),
                   ],
                 ),
               ),
@@ -232,19 +255,27 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: (isEntry ? AppTheme.accentGreen : AppTheme.accentAmber).withValues(alpha: 0.1),
+        color: (isEntry ? AppTheme.accentGreen : AppTheme.accentAmber)
+            .withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(isEntry ? Icons.login : Icons.logout, color: isEntry ? AppTheme.accentGreen : AppTheme.accentAmber, size: 20),
+          Icon(isEntry ? Icons.login : Icons.logout,
+              color: isEntry ? AppTheme.accentGreen : AppTheme.accentAmber,
+              size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(log.studentId ?? 'Unknown', style: TextStyle(fontWeight: FontWeight.w500, color: AppTheme.textPrimary)),
-                Text(log.relativeTime, style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                Text(log.studentId,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textPrimary)),
+                Text(log.relativeTime,
+                    style:
+                        TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
               ],
             ),
           ),
@@ -256,7 +287,10 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
             ),
             child: Text(
               isEntry ? 'IN' : 'OUT',
-              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -280,13 +314,17 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
             child: Center(
               child: Text(
                 number,
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryBlue),
               ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(text, style: TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
+            child: Text(text,
+                style: TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
           ),
         ],
       ),
@@ -298,14 +336,18 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
 
     if (studentId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a student ID'), backgroundColor: AppTheme.accentRed),
+        const SnackBar(
+            content: Text('Please enter a student ID'),
+            backgroundColor: AppTheme.accentRed),
       );
       return;
     }
 
     if (!RegExp(r'^\d{11}$').hasMatch(studentId)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Student ID must be exactly 11 digits'), backgroundColor: AppTheme.accentRed),
+        const SnackBar(
+            content: Text('Student ID must be exactly 11 digits'),
+            backgroundColor: AppTheme.accentRed),
       );
       return;
     }
@@ -316,29 +358,31 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
       final provider = Provider.of<LibraryProvider>(context, listen: false);
       final result = await provider.processScan(studentId);
 
-      if (result != null) {
-        final isEntry = result.action == 'ENTRY';
-        setState(() {
-          _wasEntry = isEntry;
-          _lastScanResult = 'Student $studentId - ${isEntry ? "Entered" : "Exited"} the library';
-        });
-        _studentIdController.clear();
+      final isEntry = result.action == 'ENTRY';
+      setState(() {
+        _wasEntry = isEntry;
+        _lastScanResult =
+            'Student $studentId - ${isEntry ? "Entered" : "Exited"} the library';
+      });
+      _studentIdController.clear();
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(isEntry ? 'Entry recorded successfully' : 'Exit recorded successfully'),
-              backgroundColor: isEntry ? AppTheme.accentGreen : AppTheme.accentAmber,
-            ),
-          );
-        }
-      } else {
-        throw Exception('Scan failed');
-      }
-    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Scan failed: $e'), backgroundColor: AppTheme.accentRed),
+          SnackBar(
+            content: Text(isEntry
+                ? 'Entry recorded successfully'
+                : 'Exit recorded successfully'),
+            backgroundColor:
+                isEntry ? AppTheme.accentGreen : AppTheme.accentAmber,
+          ),
+        );
+      }
+        } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Scan failed: $e'),
+              backgroundColor: AppTheme.accentRed),
         );
       }
     } finally {

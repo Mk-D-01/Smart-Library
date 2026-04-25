@@ -178,7 +178,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           ),
           Divider(color: AppTheme.dividerColor),
           ListTile(
-            leading: Icon(
+            leading: const Icon(
               Icons.refresh,
               color: AppTheme.primaryBlue,
             ),
@@ -275,7 +275,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
               onPressed: () {
                 // TODO: Show about dialog
               },
-              child: Text(
+              child: const Text(
                 'About',
                 style: TextStyle(
                   color: AppTheme.primaryBlue,

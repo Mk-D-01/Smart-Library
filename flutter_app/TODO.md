@@ -1,11 +1,26 @@
-# Fix Inconsistent Student Count - TODO
+# TODO: Fix "View Seat Map" Navigation
 
-- [x] Create plan and get approval
-- [x] Update `library_provider.dart` - Add `_syncLibraryStatus()`, fix delete/exit logic, add debug logs
-- [x] Update `admin_dashboard_screen.dart` - Fix Occupied/Available stat cards
-- [x] Update `admin_controls_screen.dart` - Fix Occupied/Available cards
-- [x] Update `student_dashboard_screen.dart` - Fix Occupied quick-stat
-- [x] Update `student_home_screen.dart` - Fix DashboardTab Occupied stat
-- [x] Update `admin_settings_screen.dart` - Fix Current Occupancy
-- [x] Verify all screens use `provider.studentsInside.length`
+## Plan
+- [x] Understand current code and identify issue
+- [x] Create plan for fix
+- [x] Edit `app_navigation.dart` to pass `onNavigateToTab` callback to `AdminOverviewScreen`
+- [x] Edit `admin_overview_screen.dart` to accept callback and call it with index 3 on "View Seat Map" tap
+- [x] Verify no `Navigator.push()` is used and existing navigation isn't broken
+
+## Details
+1. `app_navigation.dart`:
+   - `_adminScreens[0]` is `AdminOverviewScreen`
+   - Remove `const` from `AdminOverviewScreen()` constructor
+   - Pass `onNavigateToTab: (index) => setState(() => _currentIndex = index)`
+
+2. `admin_overview_screen.dart`:
+   - Add `final Function(int)? onNavigateToTab;` field
+   - Add to constructor: `const AdminOverviewScreen({super.key, this.onNavigateToTab});`
+   - In `GestureDetector` onTap for "View Seat Map" card:
+     ```dart
+     onTap: () {
+       widget.onNavigateToTab?.call(3);
+     },
+     ```
+   - This switches to Seats tab (index 3) without pushing a new route.
 

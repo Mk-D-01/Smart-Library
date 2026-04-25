@@ -6,7 +6,9 @@ import '../../providers/library_provider.dart';
 
 /// Admin Overview Screen - Shows library overview and statistics
 class AdminOverviewScreen extends StatefulWidget {
-  const AdminOverviewScreen({super.key});
+  final Function(int)? onNavigateToTab;
+
+  const AdminOverviewScreen({super.key, this.onNavigateToTab});
 
   @override
   State<AdminOverviewScreen> createState() => _AdminOverviewScreenState();
@@ -179,13 +181,12 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                 // Seat Map Quick Access
                 GestureDetector(
                   onTap: () {
-                    // Navigate to seat map tab (index 3 in admin navigation)
-                    // This would need to be handled by parent, showing a card instead
+                    widget.onNavigateToTab?.call(3);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [AppTheme.primaryBlue, Color(0xFF2563EB)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -193,7 +194,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primaryBlue.withOpacity(0.3),
+                          color: AppTheme.primaryBlue.withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -204,7 +205,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(
@@ -230,7 +231,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                               Text(
                                 'See pictograph of all ${status?.totalSeats ?? 100} seats',
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                   fontSize: 13,
                                 ),
                               ),

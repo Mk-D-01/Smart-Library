@@ -39,7 +39,7 @@ class SeatMapWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -146,7 +146,7 @@ class SeatMapWidget extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 10,
-              color: textColor.withOpacity(0.8),
+              color: textColor.withValues(alpha: 0.8),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -162,7 +162,7 @@ class SeatMapWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -202,17 +202,17 @@ class SeatMapWidget extends StatelessWidget {
         const SizedBox(width: 40),
         // Column letters
         ...headers.map((header) => Expanded(
-          child: Center(
-            child: Text(
-              header,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textTertiary,
+              child: Center(
+                child: Text(
+                  header,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textTertiary,
+                  ),
+                ),
               ),
-            ),
-          ),
-        )).toList(),
+            )),
       ],
     );
   }
@@ -236,27 +236,24 @@ class SeatMapWidget extends StatelessWidget {
         ),
         // Seat cells
         ...row.map((seat) => Expanded(
-          child: _buildSeatCell(seat),
-        )).toList(),
+              child: _buildSeatCell(seat),
+            )),
       ],
     );
   }
 
   Widget _buildSeatCell(Seat seat) {
     final isOccupied = seat.isOccupied;
-    final color = isOccupied 
-        ? Colors.red.shade400 
-        : Colors.green.shade400;
-    final shadowColor = isOccupied 
-        ? Colors.red.shade200 
-        : Colors.green.shade200;
+    final color = isOccupied ? Colors.red.shade400 : Colors.green.shade400;
+    final shadowColor =
+        isOccupied ? Colors.red.shade200 : Colors.green.shade200;
 
     return GestureDetector(
       onTap: onSeatTap != null ? () => onSeatTap!(seat) : null,
       child: Padding(
         padding: const EdgeInsets.all(2),
         child: Tooltip(
-          message: isOccupied 
+          message: isOccupied
               ? 'Seat ${seat.id}: ${seat.student?.name ?? 'Occupied'}'
               : 'Seat ${seat.id}: Available',
           child: AnimatedContainer(
@@ -267,14 +264,14 @@ class SeatMapWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
               boxShadow: [
                 BoxShadow(
-                  color: shadowColor.withOpacity(0.4),
+                  color: shadowColor.withValues(alpha: 0.4),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
             child: Center(
-              child: isOccupied 
+              child: isOccupied
                   ? const Icon(
                       Icons.person,
                       size: 16,
