@@ -26,7 +26,7 @@ class _AppNavigationState extends State<AppNavigation> {
   @override
   void initState() {
     super.initState();
-    
+
     _studentScreens = [
       NavigationItem(
         icon: Icons.home,
@@ -49,7 +49,13 @@ class _AppNavigationState extends State<AppNavigation> {
       NavigationItem(
         icon: Icons.dashboard,
         label: 'Overview',
-        screen: const AdminOverviewScreen(),
+        screen: AdminOverviewScreen(
+          onNavigateToTab: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+        ),
       ),
       NavigationItem(
         icon: Icons.people,
@@ -77,7 +83,7 @@ class _AppNavigationState extends State<AppNavigation> {
   @override
   Widget build(BuildContext context) {
     final screens = widget.isAdmin ? _adminScreens : _studentScreens;
-    
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: IndexedStack(

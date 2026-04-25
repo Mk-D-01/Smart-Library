@@ -6,7 +6,9 @@ import '../../providers/library_provider.dart';
 
 /// Admin Overview Screen - Shows library overview and statistics
 class AdminOverviewScreen extends StatefulWidget {
-  const AdminOverviewScreen({super.key});
+  final Function(int)? onNavigateToTab;
+
+  const AdminOverviewScreen({super.key, this.onNavigateToTab});
 
   @override
   State<AdminOverviewScreen> createState() => _AdminOverviewScreenState();
@@ -179,8 +181,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                 // Seat Map Quick Access
                 GestureDetector(
                   onTap: () {
-                    // Navigate to seat map tab (index 3 in admin navigation)
-                    // This would need to be handled by parent, showing a card instead
+                    widget.onNavigateToTab?.call(3);
                   },
                   child: Container(
                     padding: const EdgeInsets.all(16),
