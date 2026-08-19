@@ -1,0 +1,55 @@
+================================================================================
+                    SMART LIBRARY PROJECT - SPRINT TODO LIST
+================================================================================
+
+[DAY 1] - AMAN (Repository & Docs Sanity)
+--------------------------------------------------------------------------------
+[ ] 1. Fix backend/README.md drift (Remove SQLite references, add Supabase instructions)
+[ ] 2. Update .env.example with correct Supabase environment variables
+[ ] 3. Publish canonical API documentation table with request/response schemas
+[ ] 4. Sync Git branches and confirm clean local development startup
+
+[DAY 2] - DHRUV & GAURANG (Flutter Quality & Analyzer Cleanup)
+--------------------------------------------------------------------------------
+[ ] 1. Complete Step 1: theme_config.dart (Add const to styles & fonts)
+[ ] 2. Complete Step 2: auth_provider.dart (prefer_conditional_assignment at L68)
+[ ] 3. Complete Step 3: admin_dashboard_screen.dart (use_build_context_synchronously)
+[ ] 4. Complete Step 4: admin_manual_scanner_screen.dart (const & null checks)
+[ ] 5. Complete Step 5: admin_overview_screen.dart (const & withValues migration)
+[ ] 6. Complete Step 6: admin_scanner_screen.dart (const constructors & immutables)
+[ ] 7. Complete Step 7: admin_settings_screen.dart (use_build_context_synchronously)
+[ ] 8. Complete Step 8: admin_students_inside_screen.dart (async context check)
+[ ] 9. Complete Step 9: admin_students_screen.dart (const & async context checks)
+[ ] 10. Complete Step 10: login_screen.dart (const constructors)
+[ ] 11. Complete Step 11: student_profile_screen.dart (const constructors)
+[ ] 12. Complete Step 12: supabase_service.dart (prefer_const_declarations)
+[ ] 13. Complete Step 13: custom_dialogs.dart (const constructors)
+[ ] 14. Complete Step 14: loading_skeleton.dart (const constructors)
+[ ] 15. Complete Step 15: seat_map_widget.dart (withValues migration & spread cleanup)
+[ ] 16. Run 'flutter analyze' to verify 0 errors and 0 warnings
+
+[DAY 3] - YUVRAJ (Seat Map & Pictograph Completion Sprint)
+--------------------------------------------------------------------------------
+[ ] 1. Finalize dynamic 10x10 seat map grid in Admin Web panel
+[ ] 2. Connect GET /api/seats to live student occupancy data
+[ ] 3. Polish Seat Map tab and navigation flow in Flutter mobile app
+[ ] 4. Add interactive seat hover/tap popovers with student details
+[ ] 5. Implement robust loading skeletons and zero-occupancy empty states
+
+[DAY 4] - MACHINE GUN KELLY DIVISION (API & Integration Test Hardening)
+--------------------------------------------------------------------------------
+[x] 1. Expand Jest test suite for POST /api/scan (even/odd toggle & 5s duplicate throttling)
+[x] 2. Write test cases for GET /api/student/:studentId (200 OK vs 404 Not Found)
+[x] 3. Write test cases for GET /api/seats (matrix dimensions & student assignment)
+[x] 4. Write test cases for POST /api/reset (database wipe & occupancy zeroing)
+[x] 5. Add boundary test cases for negative occupancy protection & capacity limits
+[ ] 6. Verify CI test suite passes on GitHub Actions in both secret & fallback modes
+
+[DAY 5] - YUVRAJ (Release Readiness & Deployment Checkpoint)
+--------------------------------------------------------------------------------
+[ ] 1. Perform full End-to-End smoke test (Scanner -> Backend -> Web -> Flutter App)
+[ ] 2. Update root README.md with final architecture diagrams & API documentation
+[ ] 3. Validate Docker container build and GHCR deployment workflow
+[ ] 4. Create production deployment runbook & incident troubleshooting guide
+[ ] 5. Tag release checkpoint (v1.0.0-rc1) and conduct team handoff
+================================================================================
