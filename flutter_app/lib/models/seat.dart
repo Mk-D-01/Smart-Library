@@ -1,16 +1,22 @@
 class SeatStudent {
   final String id;
   final String name;
+  final String? entryTime;
+  final String? course;
 
   SeatStudent({
     required this.id,
     required this.name,
+    this.entryTime,
+    this.course,
   });
 
   factory SeatStudent.fromJson(Map<String, dynamic> json) {
     return SeatStudent(
       id: json['id'] ?? '',
       name: json['name'] ?? 'Unknown',
+      entryTime: json['entryTime']?.toString() ?? json['entry_time']?.toString(),
+      course: json['course']?.toString() ?? json['degree']?.toString(),
     );
   }
 }
