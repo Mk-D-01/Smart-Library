@@ -32,11 +32,16 @@ class SeatMapWidget extends StatelessWidget {
   }
 
   Widget _buildLegend() {
+    final isDark = AppTheme.isDarkMode;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: const BorderRadius.all(Radius.circular(12)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -129,7 +134,7 @@ class SeatMapWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: const BorderRadius.all(Radius.circular(10)),
       ),
       child: Column(
         children: [
@@ -156,10 +161,15 @@ class SeatMapWidget extends StatelessWidget {
   }
 
   Widget _buildSeatGrid() {
+    final isDark = AppTheme.isDarkMode;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -192,6 +202,7 @@ class SeatMapWidget extends StatelessWidget {
   }
 
   Widget _buildColumnHeaders() {
+    final isDark = AppTheme.isDarkMode;
     final headers = List.generate(seatMap.cols, (i) {
       return String.fromCharCode(65 + i); // A, B, C...
     });
@@ -209,7 +220,7 @@ class SeatMapWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.textTertiary,
+                  color: isDark ? Colors.grey.shade400 : AppTheme.textTertiary,
                 ),
               ),
             ),
@@ -219,6 +230,7 @@ class SeatMapWidget extends StatelessWidget {
   }
 
   Widget _buildSeatRow(List<Seat> row, int rowIndex) {
+    final isDark = AppTheme.isDarkMode;
     return Row(
       children: [
         // Row number
@@ -230,7 +242,7 @@ class SeatMapWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.textTertiary,
+                color: isDark ? Colors.grey.shade400 : AppTheme.textTertiary,
               ),
             ),
           ),
