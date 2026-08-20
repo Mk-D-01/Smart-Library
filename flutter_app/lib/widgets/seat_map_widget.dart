@@ -135,6 +135,10 @@ class SeatMapWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: const BorderRadius.all(Radius.circular(10)),
+        border: Border.all(
+          color: textColor.withValues(alpha: 0.25),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
