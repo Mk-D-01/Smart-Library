@@ -5,26 +5,42 @@ import { isAccessExpired, calculateAccessExpiryDate, daysUntilExpiry, getAccessE
 import { updateOccupiedSeats } from '../models/library.model';
 
 describe('Smart Library Comprehensive API Test Suite', () => {
-  const testStudentId = `TEST_MGK_${Date.now()}`;
+  const testStudentId = `TEST_STUDENT_${Date.now()}`;
 
   beforeAll(async () => {
     await initializeDatabase();
   });
 
-  // 1. Health & Status Checks
+  // 1. Root & Health Check Endpoints
+  describe('GET / (API Index)', () => {
+    it('should return 200 with API name, version, and endpoints metadata', async () => {
+      const res = await request(app).get('/');
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body).toHaveProperty('message');
+      expect(res.body).toHaveProperty('version');
+      expect(res.body).toHaveProperty('endpoints');
+      expect(typeof res.body.endpoints).toBe('object');
+      expect(res.body.endpoints).toHaveProperty('status', '/api/status');
+      expect(res.body.endpoints).toHaveProperty('scan', '/api/scan');
+      expect(res.body.endpoints).toHaveProperty('health', '/api/health');
+    });
+  });
+
   describe('GET /api/health', () => {
-    it('should return 200 and healthy status', async () => {
+    it('should return 200 and healthy status with valid timestamp and numeric uptime', async () => {
       const res = await request(app).get('/api/health');
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.status).toBe('healthy');
-      expect(res.body).toHaveProperty('uptime');
-      expect(res.body).toHaveProperty('timestamp');
+      expect(typeof res.body.uptime).toBe('number');
+      expect(new Date(res.body.timestamp).toISOString()).toBe(res.body.timestamp);
     });
   });
 
+  // 2. Library Status
   describe('GET /api/status', () => {
-    it('should return library occupancy status metrics', async () => {
+    it('should return library occupancy status metrics with non-negative available seats', async () => {
       const res = await request(app).get('/api/status');
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -34,19 +50,27 @@ describe('Smart Library Comprehensive API Test Suite', () => {
       expect(res.body.data).toHaveProperty('occupancyRate');
       expect(typeof res.body.data.totalSeats).toBe('number');
       expect(typeof res.body.data.occupiedSeats).toBe('number');
+      expect(res.body.data.availableSeats).toBeGreaterThanOrEqual(0);
+      expect(res.body.data.occupiedSeats + res.body.data.availableSeats).toBe(res.body.data.totalSeats);
+
+      const expectedOccupancyRate = res.body.data.totalSeats > 0
+        ? Math.round((res.body.data.occupiedSeats / res.body.data.totalSeats) * 100)
+        : 0;
+      expect(res.body.data.occupancyRate).toBe(expectedOccupancyRate);
     });
   });
 
-  // 2. Scan Operations & Hardware Throttling
+  // 3. Software Scan Operations & Cooldown Throttling
   describe('POST /api/scan', () => {
-    it('should reject scan if studentId is missing (400 Bad Request)', async () => {
+    it('should reject scan if studentId is missing (400 Bad Request) without exposing stack trace', async () => {
       const res = await request(app).post('/api/scan').send({});
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.error).toMatch(/Student ID is required/i);
+      expect(res.body.stack).toBeUndefined();
     });
 
-    it('should process ENTRY scan and auto-create new student', async () => {
+    it('should process ENTRY scan and auto-create new student with INSIDE status', async () => {
       const res = await request(app)
         .post('/api/scan')
         .send({ studentId: testStudentId });
@@ -61,7 +85,7 @@ describe('Smart Library Comprehensive API Test Suite', () => {
       expect(res.body.libraryStatus).toHaveProperty('availableSeats');
     });
 
-    it('should reject duplicate scan within 5s cooldown window', async () => {
+    it('should reject duplicate scan within 5s cooldown window without modifying occupancy', async () => {
       const res = await request(app)
         .post('/api/scan')
         .send({ studentId: testStudentId });
@@ -71,7 +95,7 @@ describe('Smart Library Comprehensive API Test Suite', () => {
       expect(res.body.error).toMatch(/Duplicate scan detected/i);
     });
 
-    it('should process EXIT scan after cooldown period', async () => {
+    it('should process EXIT scan after cooldown period and set status to OUTSIDE', async () => {
       // Wait for 5.1 seconds cooldown window
       await new Promise((resolve) => setTimeout(resolve, 5100));
 
@@ -87,13 +111,14 @@ describe('Smart Library Comprehensive API Test Suite', () => {
     }, 15000);
   });
 
-  // 3. Student Details & Access Validation (Task 2)
+  // 4. Student Details & Access Expiry Validation
   describe('GET /api/student/:studentId', () => {
-    it('should return 404 Not Found for non-existent student', async () => {
+    it('should return 404 Not Found for non-existent student without exposing sensitive information', async () => {
       const res = await request(app).get('/api/student/NONEXISTENT_STUDENT_ID_99999');
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
       expect(res.body.error).toMatch(/Student not found/i);
+      expect(res.body.stack).toBeUndefined();
     });
 
     it('should return 200 OK with student profile for existing student', async () => {
@@ -128,7 +153,7 @@ describe('Smart Library Comprehensive API Test Suite', () => {
     });
   });
 
-  // 4. Seat Map & Matrix Dimensions & Occupant Assignment (Task 3)
+  // 5. Seat Map & Matrix Dimensions & Occupant Assignment
   describe('GET /api/seats', () => {
     it('should return 200 OK with complete seat map metrics and 2D matrix structure', async () => {
       const res = await request(app).get('/api/seats');
@@ -156,6 +181,7 @@ describe('Smart Library Comprehensive API Test Suite', () => {
       // Verify each row and seat coordinate structure
       let totalCountedSeats = 0;
       let totalCountedOccupied = 0;
+      const seenSeatIds = new Set<number>();
 
       for (let r = 0; r < seats.length; r++) {
         expect(Array.isArray(seats[r])).toBe(true);
@@ -165,6 +191,9 @@ describe('Smart Library Comprehensive API Test Suite', () => {
           const seat = seats[r][c];
           totalCountedSeats++;
           expect(seat).toHaveProperty('id');
+          expect(seenSeatIds.has(seat.id)).toBe(false);
+          seenSeatIds.add(seat.id);
+
           expect(seat.row).toBe(r + 1);
           expect(seat.col).toBe(c + 1);
           expect(['AVAILABLE', 'OCCUPIED']).toContain(seat.status);
@@ -215,25 +244,36 @@ describe('Smart Library Comprehensive API Test Suite', () => {
     });
   });
 
-  // 5. Scan Logs & Students Inside
+  // 6. Scan Logs & Students Inside
   describe('GET /api/scan-logs & GET /api/students-inside', () => {
-    it('should return scan logs array', async () => {
+    it('should return scan logs array ordered newest first with limit respected', async () => {
       const res = await request(app).get('/api/scan-logs?limit=5');
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.data)).toBe(true);
+      expect(typeof res.body.count).toBe('number');
+      expect(res.body.count).toBe(res.body.data.length);
+      expect(res.body.data.length).toBeLessThanOrEqual(5);
+
+      // Verify ordering newest first
+      if (res.body.data.length > 1) {
+        const firstTime = new Date(res.body.data[0].timestamp).getTime();
+        const secondTime = new Date(res.body.data[1].timestamp).getTime();
+        expect(firstTime).toBeGreaterThanOrEqual(secondTime);
+      }
     });
 
-    it('should return students currently inside', async () => {
+    it('should return students currently inside with matching count', async () => {
       const res = await request(app).get('/api/students-inside');
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.data)).toBe(true);
       expect(typeof res.body.count).toBe('number');
+      expect(res.body.count).toBe(res.body.data.length);
     });
   });
 
-  // 6. Administrative Reset & Boundary Guards (Task 4)
+  // 7. Administrative Reset & Boundary Guards
   describe('POST /api/reset', () => {
     it('should reset library occupancy, set all students to OUTSIDE, and zero occupancy metrics', async () => {
       // 1. Perform reset call
@@ -255,7 +295,7 @@ describe('Smart Library Comprehensive API Test Suite', () => {
       expect(studentsInsideRes.body.count).toBe(0);
       expect(studentsInsideRes.body.data).toEqual([]);
 
-      // 4. Verify seat map pictograph reflects all seats AVAILABLE
+      // 4. Verify seat map reflects all seats AVAILABLE
       const seatMapRes = await request(app).get('/api/seats');
       expect(seatMapRes.status).toBe(200);
       expect(seatMapRes.body.data.occupiedSeats).toBe(0);
@@ -279,6 +319,17 @@ describe('Smart Library Comprehensive API Test Suite', () => {
       expect(statusRes.status).toBe(200);
       expect(statusRes.body.data.occupiedSeats).toBe(0);
       expect(statusRes.body.data.occupiedSeats).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  // 8. Unknown Route Handling
+  describe('GET /api/does-not-exist (404 Unknown Route)', () => {
+    it('should return 404 with standard error and no stack trace or secrets exposed', async () => {
+      const res = await request(app).get('/api/does-not-exist');
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toMatch(/Route \/api\/does-not-exist not found/i);
+      expect(res.body.stack).toBeUndefined();
     });
   });
 });
