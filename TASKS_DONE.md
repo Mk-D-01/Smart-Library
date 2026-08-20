@@ -34,6 +34,7 @@ This tracker maintains a weekly record of completed deliverables, active milesto
 - [x] **Flutter Client Check:** Ran `flutter analyze` (0 issues found) and `flutter test` (all tests passed).
 - [x] **Docker Container Validation:** Built `smart-library-backend:latest`, verified container startup, tested `GET /api/health` against container, tested restart capability, and cleanly tore down compose stack.
 - [x] **CI/CD Configuration:** Validated `.github/workflows/ci.yml` and `cd-backend-docker.yml` syntax and least-privilege permissions.
+- [x] **Team Database Migration:** Migrated database to new team-accessible Supabase project (`durphnxkjxboefxkkfty`), configured Realtime tables, updated Flutter config and backend env, and verified 20/20 test suites.
 
 ---
 
