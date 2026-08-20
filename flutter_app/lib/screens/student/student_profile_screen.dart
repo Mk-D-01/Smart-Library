@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../config/theme_config.dart';
 import '../../models/user.dart';
 
@@ -12,26 +13,12 @@ class StudentProfileScreen extends StatefulWidget {
 }
 
 class _StudentProfileScreenState extends State<StudentProfileScreen> {
-  bool _darkMode = false;
   bool _notifications = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  void _loadSettings() {
-    // TODO: Load from SharedPreferences
-    setState(() {
-      _darkMode = false; // Default
-      _notifications = true; // Default
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final user = authProvider.currentUser;
 
     return Scaffold(
@@ -43,18 +30,26 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: Icon(
+              themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+            ),
+            tooltip: 'Toggle Theme',
+            onPressed: () => themeProvider.toggleTheme(),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _showLogoutDialog,
           ),
         ],
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             _buildProfileHeader(user),
             const SizedBox(height: 24),
-            _buildSettingsSection(),
+            _buildSettingsSection(themeProvider),
             const SizedBox(height: 24),
             _buildAppInfo(),
           ],
@@ -131,7 +126,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
     );
   }
 
-  Widget _buildSettingsSection() {
+  Widget _buildSettingsSection(ThemeProvider themeProvider) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -152,15 +147,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
           ),
           const SizedBox(height: 16),
           _buildSettingItem(
-            icon: Icons.dark_mode,
+            icon: themeProvider.isDarkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
             title: 'Dark Mode',
-            subtitle: 'Toggle dark theme',
-            value: _darkMode,
+            subtitle: themeProvider.isDarkMode ? 'Dark theme enabled' : 'Light theme enabled',
+            value: themeProvider.isDarkMode,
             onChanged: (value) {
-              setState(() {
-                _darkMode = value;
-              });
-              // TODO: Implement theme switching
+              themeProvider.setDarkMode(value);
             },
           ),
           Divider(color: AppTheme.dividerColor),

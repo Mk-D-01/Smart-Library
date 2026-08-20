@@ -74,16 +74,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         );
 
-        // Navigate to appropriate screen after successful login
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (!mounted) return;
-
-          if (authProvider.isAdmin) {
-            Navigator.of(context).pushReplacementNamed('/admin');
-          } else {
-            Navigator.of(context).pushReplacementNamed('/student');
-          }
-        });
+        // AuthWrapper in main.dart automatically reacts to authProvider.currentUser and shows AppNavigation
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/library_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../config/theme_config.dart';
 import '../../models/scan_log.dart';
 
@@ -22,14 +23,36 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: const Text('My Scan History'),
-        backgroundColor: AppTheme.primaryBlue,
-        foregroundColor: Colors.white,
-        elevation: 0,
-      ),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          backgroundColor: AppTheme.background,
+          appBar: AppBar(
+            title: const Text('My Scan History'),
+            backgroundColor: AppTheme.primaryBlue,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            actions: [
+              IconButton(
+                icon: Icon(
+                  themeProvider.isDarkMode
+                      ? Icons.light_mode_rounded
+                      : Icons.dark_mode_rounded,
+                ),
+                tooltip: 'Toggle Theme',
+                onPressed: () => themeProvider.toggleTheme(),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                tooltip: 'Refresh History',
+                onPressed: () async {
+                  await Provider.of<LibraryProvider>(context, listen: false)
+                      .fetchScanLogs();
+                },
+              ),
+            ],
+          ),
       body: Consumer<LibraryProvider>(
         builder: (context, libraryProvider, child) {
           if (libraryProvider.isLoading) {
@@ -79,6 +102,8 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
                   .fetchScanLogs();
             },
             child: ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics()),
               padding: const EdgeInsets.all(16),
               itemCount: scanLogs.length,
               itemBuilder: (context, index) {
@@ -89,6 +114,8 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
           );
         },
       ),
+        );
+      },
     );
   }
 

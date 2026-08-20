@@ -1,8 +1,38 @@
 /* Custom CSS for Smart Library Admin Panel */
+:root {
+    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-/* Font Family */
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Font Family & Global Smoothness */
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    text-rendering: optimizeLegibility;
+}
+
+/* Tactile Active Button Feedback */
+button:active,
+.seat-filter-btn:active,
+.seat-zone-btn:active {
+    transform: scale(0.96) !important;
+    transition: transform 0.08s ease !important;
+}
+
+/* GPU Hardware Layer Promotion */
+.stat-card,
+.seat,
+.toast,
+.seat-floating-tooltip {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
 /* Custom Animations */
@@ -212,37 +242,220 @@ body {
     color: #991B1B;
 }
 
-/* Seat Grid Styles */
-.seat {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.5rem;
+/* Dynamic 10x10 Seat Map Styles */
+.seat-matrix-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.seat-row {
+    display: grid;
+    grid-template-columns: repeat(11, minmax(0, 1fr));
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.seat-row-label {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 0.8125rem;
+    color: #6B7280;
+    background: #F3F4F6;
+    border-radius: 0.5rem;
+    height: 2.75rem;
+    user-select: none;
 }
 
-.seat-empty {
-    background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
-    color: #6B7280;
-    border: 1px solid #D1D5DB;
+.seat {
+    position: relative;
+    height: 2.75rem;
+    border-radius: 0.625rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.24s ease, background 0.2s ease, border-color 0.2s ease;
+    user-select: none;
+    will-change: transform;
+}
+
+.seat-empty,
+.seat-available {
+    background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+    color: #065F46;
+    border: 1.5px solid #10B981;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15);
+}
+
+.seat-empty:hover,
+.seat-available:hover {
+    background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+    border-color: #059669;
+    color: #064E3B;
+    transform: translateY(-5px) scale(1.10);
+    box-shadow: 0 12px 20px -3px rgba(16, 185, 129, 0.35), 0 4px 8px -2px rgba(16, 185, 129, 0.2);
+    z-index: 30;
 }
 
 .seat-occupied {
-    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
-    color: white;
-    border: 1px solid #2563EB;
-    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%);
+    color: #FFFFFF;
+    border: 1.5px solid #BE123C;
+    box-shadow: 0 4px 6px -1px rgba(225, 29, 72, 0.25), 0 2px 4px -1px rgba(225, 29, 72, 0.15);
 }
 
-.seat:hover {
-    transform: scale(1.15) translateY(-2px);
-    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.15);
-    z-index: 10;
+.seat-occupied:hover {
+    background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%);
+    border-color: #9F1239;
+    transform: translateY(-5px) scale(1.10);
+    box-shadow: 0 14px 24px -3px rgba(225, 29, 72, 0.4), 0 6px 10px -2px rgba(225, 29, 72, 0.25);
+    z-index: 30;
+}
+
+.seat:active {
+    transform: scale(0.90) translateY(1px) !important;
+    transition: transform 0.08s ease-out !important;
+}
+
+.seat .seat-number {
+    font-size: 0.75rem;
+    line-height: 1;
+    font-weight: 700;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: inline-block;
+}
+
+.seat:hover .seat-number {
+    transform: translateY(-1.5px) scale(1.08);
+}
+
+.seat .seat-sublabel {
+    font-size: 0.625rem;
+    line-height: 1;
+    margin-top: 2px;
+    opacity: 0.85;
+    transition: transform 0.2s ease-out;
+}
+
+.seat:hover .seat-sublabel {
+    transform: translateY(1px);
+}
+
+.seat-cell-pulse {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    background-color: #FFFFFF;
+    border-radius: 9999px;
+    box-shadow: 0 0 8px #FFFFFF;
+    animation: seatPulse 1.8s infinite;
+}
+
+@keyframes seatPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.4;
+        transform: scale(1.4);
+    }
+}
+
+.seat-number {
+    font-size: 0.75rem;
+    line-height: 1;
+    font-weight: 700;
+}
+
+.seat-sublabel {
+    font-size: 0.625rem;
+    line-height: 1;
+    margin-top: 2px;
+    opacity: 0.85;
+}
+
+.seat-dimmed {
+    opacity: 0.18 !important;
+    filter: grayscale(80%);
+    transform: scale(0.94);
+    pointer-events: none;
+}
+
+.seat-filter-btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.seat-filter-btn.active {
+    background-color: #FFFFFF !important;
+    color: #111827 !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+/* High-Visibility Multi-Zone Floorplan Navigator Cards */
+.seat-zone-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.seat-zone-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(129, 140, 248, 0.6);
+    transform: translateY(-2px);
+}
+
+.seat-zone-card.active {
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.45) 0%, rgba(99, 102, 241, 0.25) 100%) !important;
+    border-color: #818CF8 !important;
+    box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.5), 0 10px 20px -3px rgba(79, 70, 229, 0.35) !important;
+}
+
+.seat-zone-card .zone-badge {
+    background: rgba(255, 255, 255, 0.15);
+    color: #E0E7FF;
+}
+
+.seat-zone-card.active .zone-badge {
+    background: #6366F1 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.5);
+}
+
+/* Floating Tooltip */
+.seat-floating-tooltip {
+    background: rgba(17, 24, 39, 0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #F9FAFB;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    min-width: 170px;
+    transform: translate(-50%, -100%);
+    margin-top: -10px;
+    pointer-events: none;
+    z-index: 100;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Progress Bar Styles */
@@ -529,13 +742,222 @@ body {
     }
 }
 
-/* Reduced Motion Support */
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+/* Modal Spring Scale Animation */
+@keyframes modalPopIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.92) translateY(16px);
+    }
+    60% {
+        opacity: 1;
+        transform: scale(1.02) translateY(-2px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
     }
 }
+
+#seatDetailModal:not(.hidden) > div > div,
+#resetModal:not(.hidden) > div > div {
+    animation: modalPopIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ========================================================
+   COMPREHENSIVE DARK MODE SUPPORT (html.dark)
+   ======================================================== */
+html.dark {
+    color-scheme: dark;
+}
+
+html.dark body {
+    background-color: #0B0F19 !important;
+    color: #F1F5F9 !important;
+}
+
+html.dark header {
+    background-color: #111827 !important;
+    border-color: #1F2937 !important;
+}
+
+html.dark .bg-white {
+    background-color: #131D31 !important;
+    border-color: #1F2E4A !important;
+    color: #F1F5F9 !important;
+}
+
+html.dark .bg-gray-50 {
+    background-color: #0F172A !important;
+    border-color: #1E293B !important;
+}
+
+html.dark .bg-gray-100 {
+    background-color: #1E293B !important;
+    color: #E2E8F0 !important;
+}
+
+html.dark .text-gray-900 {
+    color: #F8FAFC !important;
+}
+
+html.dark .text-gray-800,
+html.dark .text-gray-700 {
+    color: #CBD5E1 !important;
+}
+
+html.dark .text-gray-600 {
+    color: #94A3B8 !important;
+}
+
+html.dark .text-gray-500 {
+    color: #64748B !important;
+}
+
+html.dark .border-gray-100,
+html.dark .border-gray-200 {
+    border-color: #1F2E4A !important;
+}
+
+html.dark .seat-row-label {
+    background: #1E293B !important;
+    color: #94A3B8 !important;
+}
+
+html.dark .seat-available {
+    background: linear-gradient(135deg, rgba(6, 78, 59, 0.55) 0%, rgba(6, 95, 70, 0.7) 100%) !important;
+    color: #6EE7B7 !important;
+    border: 1.5px solid #059669 !important;
+}
+
+html.dark .seat-available:hover {
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.8) 0%, rgba(16, 185, 129, 0.85) 100%) !important;
+    color: #ECFDF5 !important;
+    border-color: #10B981 !important;
+}
+
+html.dark .seat-occupied {
+    background: linear-gradient(135deg, #991B1B 0%, #BE123C 100%) !important;
+    color: #FFFFFF !important;
+    border: 1.5px solid #E11D48 !important;
+}
+
+html.dark .seat-filter-btn.active {
+    background-color: #334155 !important;
+    color: #F8FAFC !important;
+}
+
+html.dark .table thead th {
+    background-color: #0F172A !important;
+    color: #94A3B8 !important;
+    border-color: #1F2E4A !important;
+}
+
+html.dark .table tbody tr {
+    border-color: #1F2E4A !important;
+}
+
+html.dark .table tbody tr:hover {
+    background-color: rgba(30, 41, 59, 0.6) !important;
+}
+
+html.dark select,
+html.dark input {
+    background-color: #1E293B !important;
+    color: #F8FAFC !important;
+    border-color: #334155 !important;
+}
+
+html.dark .modal-content {
+    background-color: #131D31 !important;
+    color: #F1F5F9 !important;
+}
+
+/* ==========================================================================
+   Rich Aesthetic Enhancements (Glassmorphism & Micro-Animations)
+   ========================================================================== */
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+html.dark .glass-card {
+    background: rgba(19, 29, 49, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Smooth Table Row Transitions & Subtle Hover Glow */
+.table-row-hover {
+    transition: all 0.2s var(--ease-smooth);
+}
+
+.table-row-hover:hover {
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.04) 0%, rgba(168, 85, 247, 0.04) 100%);
+    transform: translateY(-1px);
+}
+
+html.dark .table-row-hover:hover {
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%) !important;
+}
+
+/* Pulsing Status Dot */
+.status-pulse {
+    animation: statusPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes statusPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.4;
+        transform: scale(1.15);
+    }
+}
+
+/* Course Badges Dynamic Gradients */
+.badge-course-btech {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+    color: #4F46E5;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+html.dark .badge-course-btech {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.25) 100%);
+    color: #A5B4FC;
+    border: 1px solid rgba(99, 102, 241, 0.4);
+}
+
+/* Custom Scrollbar for Matrices & Tables */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.7);
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+    background: rgba(71, 85, 105, 0.6);
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.9);
+}
+
+
