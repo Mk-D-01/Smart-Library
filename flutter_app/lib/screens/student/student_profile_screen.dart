@@ -63,7 +63,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: AppTheme.blueGradient,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         boxShadow: AppTheme.cardShadow,
       ),
       child: Row(
@@ -73,7 +73,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
             height: 80,
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(40),
+              borderRadius: const BorderRadius.all(Radius.circular(40)),
             ),
             child: const Icon(
               Icons.person,
@@ -107,7 +107,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
                   ),
                   child: Text(
                     user?.role.name.toUpperCase() ?? 'STUDENT',
@@ -131,7 +131,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
@@ -243,7 +243,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardBackground,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
@@ -310,18 +310,18 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> {
   void _showLogoutDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Provider.of<AuthProvider>(context, listen: false).logout();
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await Provider.of<AuthProvider>(context, listen: false).logout();
             },
             child: const Text(
               'Logout',

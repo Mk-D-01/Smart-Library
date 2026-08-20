@@ -21,7 +21,7 @@ class SeatMapWidget extends StatefulWidget {
 class _SeatMapWidgetState extends State<SeatMapWidget> {
   int _selectedZone = 1;
 
-  final List<Map<String, dynamic>> _zones = [
+  final List<Map<String, dynamic>> _zones = const [
     {'zone': 1, 'label': 'Zone 1', 'range': '1–100', 'desc': 'Ground Floor • North'},
     {'zone': 2, 'label': 'Zone 2', 'range': '101–200', 'desc': 'Floor 1 • East Wing'},
     {'zone': 3, 'label': 'Zone 3', 'range': '201–300', 'desc': 'Floor 2 • West Wing'},
@@ -56,7 +56,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
           width: 1,
@@ -99,7 +99,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                   decoration: BoxDecoration(
                     color: (isDark ? const Color(0xFF818CF8) : AppTheme.primaryBlue)
                         .withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Text(
                     'Zone $_selectedZone',
@@ -115,73 +115,73 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
           ),
           const SizedBox(height: 8),
           Row(
-            children: _zones.map((zoneData) {
-              final zone = zoneData['zone'] as int;
-              final isSelected = _selectedZone == zone;
-
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() {
-                      _selectedZone = zone;
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeInOut,
-                    margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppTheme.primaryBlue
-                          : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: isSelected
+            children: [
+              for (final zoneData in _zones)
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        _selectedZone = zoneData['zone'] as int;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeInOut,
+                      margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: _selectedZone == (zoneData['zone'] as int)
                             ? AppTheme.primaryBlue
-                            : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                        width: 1.5,
+                            : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
+                        border: Border.all(
+                          color: _selectedZone == (zoneData['zone'] as int)
+                              ? AppTheme.primaryBlue
+                              : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                          width: 1.5,
+                        ),
+                        boxShadow: _selectedZone == (zoneData['zone'] as int)
+                            ? [
+                                BoxShadow(
+                                  color: AppTheme.primaryBlue.withValues(alpha: 0.35),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : null,
                       ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: AppTheme.primaryBlue.withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          zoneData['label'] as String,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : (isDark ? Colors.white70 : AppTheme.textPrimary),
-                            fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      child: Column(
+                        children: [
+                          Text(
+                            zoneData['label'] as String,
+                            style: TextStyle(
+                              color: _selectedZone == (zoneData['zone'] as int)
+                                  ? Colors.white
+                                  : (isDark ? Colors.white70 : AppTheme.textPrimary),
+                              fontSize: 11,
+                              fontWeight: _selectedZone == (zoneData['zone'] as int)
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          zoneData['range'] as String,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.white.withValues(alpha: 0.85)
-                                : (isDark ? Colors.grey.shade400 : AppTheme.textSecondary),
-                            fontSize: 9,
-                            fontWeight: FontWeight.w400,
+                          const SizedBox(height: 2),
+                          Text(
+                            zoneData['range'] as String,
+                            style: TextStyle(
+                              color: _selectedZone == (zoneData['zone'] as int)
+                                  ? Colors.white.withValues(alpha: 0.85)
+                                  : (isDark ? Colors.grey.shade400 : AppTheme.textSecondary),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              );
-            }).toList(),
+            ],
           ),
         ],
       ),
@@ -193,7 +193,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
           width: 1,
@@ -227,7 +227,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
           height: 14,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
           ),
         ),
         const SizedBox(width: 6),
@@ -294,7 +294,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(
           color: textColor.withValues(alpha: 0.25),
           width: 1,
@@ -331,7 +331,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
           width: 1,
@@ -374,42 +374,44 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                         ),
                       ),
                       // 10 Seat Cells
-                      ...List.generate(10, (colIndex) {
-                        final deskNumber = zoneOffset + (rowIndex * 10) + colIndex + 1;
-                        if (deskNumber > totalCapacity) {
-                          // Buffer
-                          return Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(1.5),
-                              child: Container(
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(5),
-                                  border: Border.all(
-                                    color: isDark ? const Color(0xFF334155) : Colors.grey.shade200,
+                      for (int colIndex = 0; colIndex < 10; colIndex++) ...[
+                        () {
+                          final deskNumber = zoneOffset + (rowIndex * 10) + colIndex + 1;
+                          if (deskNumber > totalCapacity) {
+                            // Buffer
+                            return Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(1.5),
+                                child: Container(
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade100,
+                                    borderRadius: const BorderRadius.all(Radius.circular(5)),
+                                    border: Border.all(
+                                      color: isDark ? const Color(0xFF334155) : Colors.grey.shade200,
+                                    ),
+                                  ),
+                                  child: const Center(
+                                    child: Text('--', style: TextStyle(fontSize: 8, color: Colors.grey)),
                                   ),
                                 ),
-                                child: const Center(
-                                  child: Text('--', style: TextStyle(fontSize: 8, color: Colors.grey)),
-                                ),
                               ),
-                            ),
+                            );
+                          }
+
+                          final isOccupied = deskNumber <= widget.seatMap.occupiedSeats;
+                          final seat = Seat(
+                            id: deskNumber,
+                            row: rowIndex + 1,
+                            col: colIndex + 1,
+                            status: isOccupied ? 'OCCUPIED' : 'AVAILABLE',
                           );
-                        }
 
-                        final isOccupied = deskNumber <= widget.seatMap.occupiedSeats;
-                        final seat = Seat(
-                          id: deskNumber,
-                          row: rowIndex + 1,
-                          col: colIndex + 1,
-                          status: isOccupied ? 'OCCUPIED' : 'AVAILABLE',
-                        );
-
-                        return Expanded(
-                          child: _buildSeatCell(seat, deskNumber, isDark),
-                        );
-                      }),
+                          return Expanded(
+                            child: _buildSeatCell(seat, deskNumber, isDark),
+                          );
+                        }(),
+                      ],
                     ],
                   ),
                 );
@@ -425,8 +427,8 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
     return Row(
       children: [
         const SizedBox(width: 28),
-        ...List.generate(10, (i) {
-          return Expanded(
+        for (int i = 0; i < 10; i++)
+          Expanded(
             child: Center(
               child: Text(
                 '${i + 1}',
@@ -437,8 +439,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                 ),
               ),
             ),
-          );
-        }),
+          ),
       ],
     );
   }
@@ -468,7 +469,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
             height: 32,
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: const BorderRadius.all(Radius.circular(6)),
               boxShadow: [
                 BoxShadow(
                   color: color.withValues(alpha: 0.35),
@@ -507,7 +508,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
     final studentName = seat.student?.name ?? (isOccupied ? demoStudentName : null);
     final studentId = seat.student?.id ?? (isOccupied ? demoStudentId : null);
     final studentCourse = seat.student?.course;
-    
+
     // Parse real entry time from backend, or compute a fallback
     final rawEntryTime = seat.student?.entryTime;
     final entryDateTime = rawEntryTime != null ? DateTime.tryParse(rawEntryTime) : null;
@@ -543,7 +544,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                     height: 4,
                     decoration: BoxDecoration(
                       color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: const BorderRadius.all(Radius.circular(2)),
                     ),
                   ),
                 ),
@@ -558,7 +559,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                         color: isOccupied
                             ? const Color(0xFFEF4444).withValues(alpha: 0.15)
                             : const Color(0xFF10B981).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: const BorderRadius.all(Radius.circular(14)),
                       ),
                       child: Icon(
                         isOccupied ? Icons.person_rounded : Icons.chair_rounded,
@@ -593,7 +594,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: isOccupied ? const Color(0xFFEF4444) : const Color(0xFF10B981),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: const BorderRadius.all(Radius.circular(20)),
                       ),
                       child: Text(
                         isOccupied ? 'OCCUPIED' : 'AVAILABLE',
@@ -614,7 +615,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: const BorderRadius.all(Radius.circular(16)),
                       border: Border.all(
                         color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                       ),
@@ -708,7 +709,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF064E3B).withValues(alpha: 0.2) : const Color(0xFFECFDF5),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: const BorderRadius.all(Radius.circular(16)),
                       border: Border.all(
                         color: const Color(0xFF10B981).withValues(alpha: 0.3),
                       ),
@@ -742,8 +743,8 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                       backgroundColor: AppTheme.primaryBlue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: const Text('Close', style: TextStyle(fontWeight: FontWeight.bold)),

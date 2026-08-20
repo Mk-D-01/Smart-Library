@@ -259,7 +259,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     required List<Widget> children,
   }) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16))),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -424,9 +425,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(dialogContext);
-              Provider.of<AuthProvider>(context, listen: false).logout();
+              await Provider.of<AuthProvider>(context, listen: false).logout();
             },
             child: const Text('Logout'),
           ),
