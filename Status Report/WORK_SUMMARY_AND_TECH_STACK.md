@@ -8,7 +8,7 @@
 
 ## 1. Project Overview & Current Progress Summary
 
-The **Smart Library Management System** is a next-generation IoT and cloud-integrated library management platform. It automates student entry/exit tracking, monitors real-time library occupancy and seat availability, and provides responsive user interfaces across web and mobile platforms.
+The **Smart Library Management System** is a modern cloud-integrated library management platform. It automates student entry/exit tracking, monitors real-time library occupancy and seat availability, and provides responsive user interfaces across web and mobile platforms.
 
 ### 🌟 Completed Work & Key Milestones
 
@@ -69,8 +69,8 @@ The **Smart Library Management System** is a next-generation IoT and cloud-integ
 | **Mobile Framework** | Flutter SDK | `>=3.0.0 <4.0.0` | Cross-platform native mobile application (Android, iOS) |
 | **Language (Mobile)** | Dart | Dart 3.x | Object-oriented language for mobile client |
 | **Mobile State Mgmt** | Provider | `^6.1.1` | Reactive state management across screens |
-| **Mobile Scanner** | `mobile_scanner` | `^3.5.2` | Hardware camera QR/Barcode scanning integration |
+| **Mobile Scanner** | `mobile_scanner` | `^3.5.2` | Mobile device camera QR/Barcode scanning integration |
 | **Mobile UI & Anim** | `flutter_animate`, `shimmer`, `google_fonts` | Modern UI packages | Polished micro-animations, skeleton loaders, custom typography |
-| **IoT / Hardware** | RFID / Barcode Scanner | USB HID / Serial Keyboard Emulation | Hardware student ID card scanning |
+| **Software Scanner** | ZBar / ML Kit | Integration via `mobile_scanner` | Software-based QR/Barcode decoding engine |
 | **Containerization** | Docker & Docker Compose | Multi-stage Dockerfiles | Isolated development and reproducible production deployments |
 | **CI/CD Pipeline** | GitHub Actions | Ubuntu Latest Runner | Automated testing, type checking, and GHCR container publishing |

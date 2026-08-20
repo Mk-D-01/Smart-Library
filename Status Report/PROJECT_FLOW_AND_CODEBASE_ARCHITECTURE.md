@@ -5,14 +5,13 @@
 
 ---
 
-## 1. High-Level System Architecture
-
-The Smart Library system operates as a unified distributed platform connecting physical hardware scanners, cloud databases, REST API servers, administrative web portals, and mobile client applications.
+The Smart Library system operates as a unified distributed platform connecting client software scanners, cloud databases, REST API servers, administrative web portals, and mobile client applications.
 
 ```mermaid
 graph TD
-    subgraph Physical Hardware Layer
-        A1[RFID / Barcode Card Reader] -->|USB Keyboard Emulation / Webhook| B[Backend API Gateway]
+    subgraph Client & Scanner Applications
+        A1[Admin Web Manual / Barcode Scanner] -->|REST API HTTP/JSON| B[Backend API Gateway]
+        A2[Flutter Camera QR Scanner] -->|REST API HTTP/JSON| B
     end
 
     subgraph Clients & Frontends
@@ -47,7 +46,7 @@ The core mechanism of the Smart Library relies on a deterministic **Odd/Even Sca
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Student as Student / Scanner Device
+    actor Student as Student / Client App
     participant API as Express API (/api/scan)
     participant Model as Library Model
     participant DB as Supabase DB

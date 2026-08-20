@@ -1,32 +1,32 @@
 # 📚 Smart Library Management System
 
-A modern, technology-driven solution that transforms traditional libraries into intelligent, efficient spaces using IoT hardware, student ID scanning, and real-time data management.
+A modern, software-driven solution that transforms traditional libraries into intelligent, efficient spaces using student ID and QR code scanning, real-time data management, and automated entry/exit tracking.
 
 ## Overview
 
-The Smart Library system automates library entry/exit tracking while monitoring real-time occupancy. Students scan their ID cards to enter/exit, and the system processes this data to provide instant visibility of occupied and vacant seats through a digital portal.
+The Smart Library system automates library entry/exit tracking while monitoring real-time occupancy. Students check in/out using mobile or web-based software scanning, and the system processes this data to provide instant visibility of occupied and vacant seats through digital dashboards.
 
 ### Key Features
-- ID Card Scanning - Automated student entry/exit tracking
+- Software Scan Flow - Automated student entry/exit tracking via HTTP API
 - Real-time Dashboard - Live occupancy monitoring
-- Auto-sync - Offline data sync with centralized database
+- Auto-sync - Centralized cloud database sync
 - Multi-platform - Web admin panel + Flutter mobile app
 - Cloud-based - Supabase database integration
-- Scalable - Cost-effective and reliable architecture
+- Scalable - Cost-effective, containerized, and reliable architecture
 
 ## Architecture
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   ID Scanner    │───▶│   Backend API    │───▶│   Supabase DB   │
-│   (Hardware)    │    │   (Node.js)      │    │   (Cloud)       │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                │
-                                ▼
-                       ┌──────────────────┐
-                       │   Admin Panel    │
-                       │   (Web UI)       │
-                       └──────────────────┘
+┌─────────────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│ Web / Mobile Scan Flow  │───▶│   Backend API    │───▶│   Supabase DB   │
+│ (Admin Web / Flutter)   │    │   (Node.js)      │    │   (Cloud)       │
+└─────────────────────────┘    └──────────────────┘    └─────────────────┘
+                                        │
+                                        ▼
+                               ┌──────────────────┐
+                               │   Admin Panel    │
+                               │   (Web UI)       │
+                               └──────────────────┘
 ```
 
 ## Quick Start
