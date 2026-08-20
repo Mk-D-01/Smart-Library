@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme_config.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/library_provider.dart';
+import '../../providers/theme_provider.dart';
 
 /// Student Dashboard - Shows library status and availability
 class StudentDashboardScreen extends StatefulWidget {
@@ -26,20 +27,24 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildAppBar(),
-            Expanded(child: _buildDashboardContent()),
-          ],
-        ),
-      ),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          backgroundColor: AppTheme.background,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildAppBar(themeProvider),
+                Expanded(child: _buildDashboardContent()),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(ThemeProvider themeProvider) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
@@ -91,6 +96,23 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+          // Theme Toggle Button
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryBlue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: IconButton(
+              onPressed: () => themeProvider.toggleTheme(),
+              icon: Icon(
+                themeProvider.isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                color: AppTheme.primaryBlue,
+                size: 20,
+              ),
+              tooltip: themeProvider.isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode',
             ),
           ),
           Consumer<AuthProvider>(
@@ -171,7 +193,8 @@ class _StudentDashboardScreenState extends State<StudentDashboardScreen> {
           onRefresh: () => provider.refreshData(),
           color: AppTheme.primaryBlue,
           child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
+            physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics()),
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
