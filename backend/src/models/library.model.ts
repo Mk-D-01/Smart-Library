@@ -254,6 +254,57 @@ export const getStudentsInside = async (): Promise<Student[]> => {
   }
 };
 
+// Get all students inside WITH their actual library entry time from scan_logs
+export const getStudentsInsideWithEntryTime = async (): Promise<(Student & { entryTime: string })[
+]> => {
+  try {
+    // 1. Get all students currently INSIDE
+    const students = await getStudentsInside();
+    if (students.length === 0) return [];
+
+    // 2. For each student, get their most recent ENTRY scan log
+    const studentIds = students.map(s => s.id);
+    const { data: entryLogs, error } = await db
+      .from('scan_logs')
+      .select('student_id, timestamp')
+      .in('student_id', studentIds)
+      .eq('scan_type', 'ENTRY')
+      .order('timestamp', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching entry logs:', error);
+      // Fall back to created_at if scan_logs query fails
+      return students.map(s => ({
+        ...s,
+        entryTime: s.created_at
+      }));
+    }
+
+    // 3. Build a map of studentId -> most recent ENTRY timestamp
+    const entryTimeMap: Record<string, string> = {};
+    for (const log of (entryLogs || [])) {
+      // Only keep the first (most recent) entry for each student
+      if (!entryTimeMap[log.student_id]) {
+        entryTimeMap[log.student_id] = log.timestamp;
+      }
+    }
+
+    // 4. Merge entry times into student records
+    return students.map(s => ({
+      ...s,
+      entryTime: entryTimeMap[s.id] || s.created_at
+    }));
+  } catch (error) {
+    console.error('Error in getStudentsInsideWithEntryTime:', error);
+    // Fall back to basic query
+    const students = await getStudentsInside();
+    return students.map(s => ({
+      ...s,
+      entryTime: s.created_at
+    }));
+  }
+};
+
 // Alias matching spec name
 export const getAllStudentsInside = (): Promise<Student[]> => getStudentsInside();
 

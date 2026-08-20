@@ -64,9 +64,8 @@ class AuthProvider with ChangeNotifier {
         }
 
         // Check if student exists or create new one in Supabase
-        var student = await _supabaseService.getStudent(userId);
-
-        student ??= await _supabaseService.upsertStudent(userId);
+        final student = await _supabaseService.getStudent(userId) ??
+            await _supabaseService.upsertStudent(userId);
 
         _currentUser = User(
           id: userId,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../screens/student/student_dashboard_screen.dart';
+import '../screens/student/student_seats_screen.dart';
 import '../screens/student/student_history_screen.dart';
 import '../screens/student/student_profile_screen.dart';
 import '../screens/admin/admin_overview_screen.dart';
@@ -8,6 +10,7 @@ import '../screens/admin/admin_manual_scanner_screen.dart';
 import '../screens/admin/admin_settings_screen.dart';
 import '../screens/admin/admin_seat_map_screen.dart';
 import '../config/theme_config.dart';
+import '../providers/theme_provider.dart';
 
 class AppNavigation extends StatefulWidget {
   final bool isAdmin;
@@ -29,17 +32,22 @@ class _AppNavigationState extends State<AppNavigation> {
 
     _studentScreens = [
       NavigationItem(
-        icon: Icons.home,
+        icon: Icons.home_rounded,
         label: 'Home',
         screen: const StudentDashboardScreen(),
       ),
       NavigationItem(
-        icon: Icons.history,
+        icon: Icons.chair_rounded,
+        label: 'Seats',
+        screen: const StudentSeatsScreen(),
+      ),
+      NavigationItem(
+        icon: Icons.history_rounded,
         label: 'History',
         screen: const StudentHistoryScreen(),
       ),
       NavigationItem(
-        icon: Icons.person,
+        icon: Icons.person_rounded,
         label: 'Profile',
         screen: const StudentProfileScreen(),
       ),
@@ -84,51 +92,55 @@ class _AppNavigationState extends State<AppNavigation> {
   Widget build(BuildContext context) {
     final screens = widget.isAdmin ? _adminScreens : _studentScreens;
 
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens.map((item) => item.screen).toList(),
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.cardBackground,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, -2),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          backgroundColor: AppTheme.background,
+          body: IndexedStack(
+            index: _currentIndex,
+            children: screens.map((item) => item.screen).toList(),
+          ),
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: AppTheme.cardBackground,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, -2),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          selectedItemColor: AppTheme.primaryBlue,
-          unselectedItemColor: AppTheme.textSecondary,
-          selectedLabelStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+            child: BottomNavigationBar(
+              currentIndex: _currentIndex,
+              onTap: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+              },
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              selectedItemColor: AppTheme.primaryBlue,
+              unselectedItemColor: AppTheme.textSecondary,
+              selectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 12,
+              ),
+              items: screens.asMap().entries.map((entry) {
+                final item = entry.value;
+                return BottomNavigationBarItem(
+                  icon: Icon(item.icon),
+                  label: item.label,
+                );
+              }).toList(),
+            ),
           ),
-          unselectedLabelStyle: const TextStyle(
-            fontSize: 12,
-          ),
-          items: screens.asMap().entries.map((entry) {
-            final item = entry.value;
-            return BottomNavigationBarItem(
-              icon: Icon(item.icon),
-              label: item.label,
-            );
-          }).toList(),
-        ),
-      ),
+        );
+      },
     );
   }
 }

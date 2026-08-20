@@ -74,15 +74,15 @@
 ---
 
 ### 🔹 DAY 3: Yuvraj — Seat Map & Pictograph Completion Sprint
-- [ ] **3.1 Admin Web Seat Map Integration:**
+- [x] **3.1 Admin Web Seat Map Integration:**
   - Ensure Admin Web panel seamlessly consumes `GET /api/seats` and renders the dynamic 10x10 seat matrix.
   - Add color indicators: Green (Available) vs Red (Occupied) with student hover popover.
 - [ ] **3.2 Flutter Seat Map Navigation & UX:**
   - Verify "View Seat Map" quick-access card on `AdminOverviewScreen` transitions to Seats tab without stacking routes.
   - Verify seat detail dialog/modal on mobile when tapping on occupied/available seats.
-- [ ] **3.3 Edge & Loading States:**
+- [x] **3.3 Edge & Loading States:**
   - Implement robust loading skeletons and empty states for zero-occupancy and error states on network drop.
-- [ ] **3.4 Real-Time Refresh Sync:**
+- [x] **3.4 Real-Time Refresh Sync:**
   - Ensure seat grid refreshes smoothly alongside the 5-second polling tick.
 
 ---

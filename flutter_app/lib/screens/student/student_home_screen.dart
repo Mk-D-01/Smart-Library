@@ -124,6 +124,7 @@ class _StudentHomeScreenState extends State<StudentHomeScreen>
             Expanded(
               child: TabBarView(
                 controller: _tabController,
+                physics: const BouncingScrollPhysics(),
                 children: const [
                   DashboardTab(),
                   HistoryTab(),
@@ -276,7 +277,8 @@ class DashboardTab extends StatelessWidget {
           onRefresh: () => provider.refreshData(),
           color: AppTheme.primaryBlue,
           child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
+            physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics()),
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -734,6 +736,7 @@ class HistoryTab extends StatelessWidget {
             // List
             Expanded(
               child: ListView.builder(
+                physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: logs.length,
                 itemBuilder: (context, index) {
@@ -866,6 +869,7 @@ class ProfileTab extends StatelessWidget {
         }
 
         return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme_config.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 
 /// Admin Settings Screen - System configuration and controls
 class AdminSettingsScreen extends StatefulWidget {
@@ -24,6 +25,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -32,6 +35,17 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: Icon(
+              themeProvider.isDarkMode
+                  ? Icons.light_mode_rounded
+                  : Icons.dark_mode_rounded,
+            ),
+            tooltip: 'Toggle Theme',
+            onPressed: () => themeProvider.toggleTheme(),
+          ),
+        ],
       ),
       body: Consumer<LibraryProvider>(
         builder: (context, provider, child) {
@@ -114,6 +128,31 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                               fontWeight: FontWeight.bold),
                         ),
                       ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // Appearance Settings
+                _buildSectionCard(
+                  title: 'Appearance',
+                  icon: Icons.palette,
+                  iconColor: AppTheme.primaryBlue,
+                  children: [
+                    SwitchListTile(
+                      secondary: Icon(
+                        themeProvider.isDarkMode
+                            ? Icons.dark_mode_rounded
+                            : Icons.light_mode_rounded,
+                        color: AppTheme.primaryBlue,
+                      ),
+                      title: const Text('Dark Mode'),
+                      subtitle: Text(themeProvider.isDarkMode
+                          ? 'Dark theme enabled'
+                          : 'Light theme enabled'),
+                      value: themeProvider.isDarkMode,
+                      onChanged: (value) => themeProvider.setDarkMode(value),
                     ),
                   ],
                 ),
@@ -220,7 +259,8 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     required List<Widget> children,
   }) {
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16))),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -385,9 +425,9 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(dialogContext);
-              Provider.of<AuthProvider>(context, listen: false).logout();
+              await Provider.of<AuthProvider>(context, listen: false).logout();
             },
             child: const Text('Logout'),
           ),

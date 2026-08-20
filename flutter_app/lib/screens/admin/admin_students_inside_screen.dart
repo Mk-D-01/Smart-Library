@@ -424,8 +424,8 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Force Exit'),
-        content: const Text(
-          'Force exit  () from the library?\n\nThis will update their status to OUTSIDE, log an EXIT scan, and decrement occupied seats.',
+        content: Text(
+          'Force exit ${student.name} (${student.id}) from the library?\n\nThis will update their status to OUTSIDE, log an EXIT scan, and decrement occupied seats.',
         ),
         actions: [
           TextButton(
@@ -447,7 +447,7 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
       final success = await provider.forceExitStudent(student.id,
           studentName: student.name);
       final message = success
-          ? ' force exited successfully'
+          ? '${student.name} force exited successfully'
           : 'Failed to force exit student';
       final color = success ? AppTheme.accentGreen : AppTheme.accentRed;
       if (!mounted) return;

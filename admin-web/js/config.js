@@ -17,22 +17,22 @@ const CONFIG = {
     DEBOUNCE_DELAY: 500,            // Debounce delay for API calls
     
     // Library Configuration
-    TOTAL_SEATS: 100,                // Total number of seats in library
+    TOTAL_SEATS: 350,                // Total number of seats in library
     SEAT_GRID_ROWS: 10,             // Seat grid visualization rows
     SEAT_GRID_COLS: 10,             // Seat grid visualization columns
     
     // Student Database (for demo purposes)
     STUDENTS: [
-        { id: 'STU001', name: 'Aarav Sharma' },
-        { id: 'STU002', name: 'Priya Patel' },
-        { id: 'STU003', name: 'Rohan Gupta' },
-        { id: 'STU004', name: 'Ananya Singh' },
-        { id: 'STU005', name: 'Arjun Verma' },
-        { id: 'STU006', name: 'Diya Reddy' },
-        { id: 'STU007', name: 'Kabir Mehta' },
-        { id: 'STU008', name: 'Ishita Joshi' },
-        { id: 'STU009', name: 'Vihaan Kumar' },
-        { id: 'STU010', name: 'Saanvi Iyer' }
+        { id: 'STU001', name: 'Aarav Sharma', course: 'B.Tech CSE' },
+        { id: 'STU002', name: 'Priya Patel', course: 'MBA' },
+        { id: 'STU003', name: 'Rohan Gupta', course: 'B.Tech ECE' },
+        { id: 'STU004', name: 'Ananya Singh', course: 'BBA' },
+        { id: 'STU005', name: 'Arjun Verma', course: 'B.Tech ME' },
+        { id: 'STU006', name: 'Diya Reddy', course: 'B.Pharma' },
+        { id: 'STU007', name: 'Kabir Mehta', course: 'B.Tech CSE' },
+        { id: 'STU008', name: 'Ishita Joshi', course: 'MBA' },
+        { id: 'STU009', name: 'Vihaan Kumar', course: 'B.Tech IT' },
+        { id: 'STU010', name: 'Saanvi Iyer', course: 'BCA' }
     ],
     
     // Color Configuration
@@ -69,7 +69,8 @@ const CONFIG = {
         STUDENTS_INSIDE: '/students-inside',
         SCAN_LOGS: '/scan-logs',
         ADMIN_RESET: '/reset',
-        HEALTH: '/health'
+        HEALTH: '/health',
+        SEATS: '/seats'
     },
     
     // Error Messages
@@ -103,20 +104,26 @@ const Utils = {
         });
     },
     
-    // Calculate duration between two dates
+    // Calculate live duration between entry and now (with ticking seconds for real-time display)
     calculateDuration: (entryTime) => {
-        if (!entryTime) return '--';
-        const now = new Date();
-        const entry = new Date(entryTime);
-        const diffMs = now - entry;
-        const diffMins = Math.floor(diffMs / 60000);
+        if (!entryTime) return '0s';
+        const now = Date.now();
+        const entry = new Date(entryTime).getTime();
+        if (isNaN(entry)) return '0s';
+        const diffMs = Math.max(0, now - entry);
+        const diffSecs = Math.floor(diffMs / 1000);
+        const diffMins = Math.floor(diffSecs / 60);
         const diffHours = Math.floor(diffMins / 60);
         const remainingMins = diffMins % 60;
+        const remainingSecs = diffSecs % 60;
         
         if (diffHours > 0) {
-            return `${diffHours}h ${remainingMins}m`;
+            return `${diffHours}h ${remainingMins}m ${remainingSecs}s`;
         }
-        return `${diffMins}m`;
+        if (diffMins > 0) {
+            return `${diffMins}m ${remainingSecs}s`;
+        }
+        return `${diffSecs}s`;
     },
     
     // Get relative time
