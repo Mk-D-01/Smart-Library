@@ -9,7 +9,8 @@ class LibraryAdminApp {
         this.currentData = {
             libraryStatus: null,
             studentsInside: [],
-            activityLogs: []
+            activityLogs: [],
+            seatMap: null
         };
     }
 
@@ -32,11 +33,11 @@ class LibraryAdminApp {
             // Setup event listeners
             this.setupEventListeners();
             
+            // Start periodic updates (Live clock & polling) immediately
+            this.startPeriodicUpdates();
+
             // Load initial data
             await this.loadInitialData();
-            
-            // Start periodic updates
-            this.startPeriodicUpdates();
             
             // Hide loading state
             uiManager.hideLoading();
@@ -101,17 +102,19 @@ class LibraryAdminApp {
     // Load initial data
     async loadInitialData() {
         try {
-            // Load all data in parallel
-            const [libraryStatus, studentsInside, scanLogs] = await Promise.all([
-                apiService.getLibraryStatus(),
-                apiService.getStudentsInside(),
-                apiService.getScanLogs()
+            // Load all data in parallel (including dynamic 10x10 seat map)
+            const [libraryStatus, studentsInside, scanLogs, seatMap] = await Promise.all([
+                apiService.getLibraryStatus().catch(err => { console.warn('Status fetch error:', err); return null; }),
+                apiService.getStudentsInside().catch(err => { console.warn('Students fetch error:', err); return []; }),
+                apiService.getScanLogs().catch(err => { console.warn('Scan logs fetch error:', err); return []; }),
+                apiService.getSeatMap().catch(err => { console.warn('Seat map fetch error:', err); return null; })
             ]);
 
             // Update current data
             this.currentData.libraryStatus = libraryStatus;
             this.currentData.studentsInside = studentsInside || [];
             this.currentData.activityLogs = scanLogs || [];
+            this.currentData.seatMap = seatMap;
 
             // Update UI
             this.updateAllUI();
@@ -139,8 +142,11 @@ class LibraryAdminApp {
         // Update stats
         if (this.currentData.libraryStatus) {
             uiManager.updateStats(this.currentData.libraryStatus);
-            uiManager.updateSeatGrid(this.currentData.libraryStatus.occupiedSeats);
         }
+
+        // Update Dynamic 10x10 Seat Map
+        const seatMapPayload = this.currentData.seatMap || this.currentData.libraryStatus?.occupiedSeats || 0;
+        uiManager.updateSeatGrid(seatMapPayload);
         
         // Update tables
         uiManager.updateStudentsTable(this.currentData.studentsInside);
@@ -252,16 +258,18 @@ class LibraryAdminApp {
     async refreshData() {
         try {
             // Load fresh data
-            const [libraryStatus, studentsInside, activityLogs] = await Promise.all([
-                apiService.getLibraryStatus(),
-                apiService.getStudentsInside(),
-                apiService.getScanLogs()
+            const [libraryStatus, studentsInside, activityLogs, seatMap] = await Promise.all([
+                apiService.getLibraryStatus().catch(err => { console.warn('Status refresh error:', err); return null; }),
+                apiService.getStudentsInside().catch(err => { console.warn('Students refresh error:', err); return []; }),
+                apiService.getScanLogs().catch(err => { console.warn('Scan logs refresh error:', err); return []; }),
+                apiService.getSeatMap().catch(err => { console.warn('Seat map refresh error:', err); return null; })
             ]);
 
             // Update current data
             this.currentData.libraryStatus = libraryStatus;
             this.currentData.studentsInside = studentsInside || [];
             this.currentData.activityLogs = activityLogs || [];
+            this.currentData.seatMap = seatMap;
 
             // Update UI
             this.updateAllUI();

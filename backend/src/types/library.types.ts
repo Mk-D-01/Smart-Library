@@ -6,7 +6,8 @@ export interface Student {
   scan_count: number;
   created_at: string;
   updated_at?: string;
-  // New fields for degree tracking and access expiry
+  // Student profile fields
+  course?: string; // 'B.Tech CSE', 'MBA', 'BBA', 'B.Pharma', etc.
   degree?: string; // 'BTech', 'MBA', 'BBA', 'BPharma', etc.
   admission_date?: string; // ISO date format
   access_expiry_date?: string; // ISO date format - calculated from degree + admission_date

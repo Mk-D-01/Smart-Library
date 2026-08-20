@@ -123,32 +123,6 @@ class _AdminSeatMapScreenState extends State<AdminSeatMapScreen> {
               padding: const EdgeInsets.all(16.0),
               child: SeatMapWidget(
                 seatMap: seatMap,
-                onSeatTap: (seat) {
-                  if (seat.isOccupied && seat.student != null) {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Seat Information'),
-                        content: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Seat #${seat.id}'),
-                            const SizedBox(height: 8),
-                            Text('Student: ${seat.student!.name}'),
-                            Text('ID: ${seat.student!.id}'),
-                          ],
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Close'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                },
               ),
             ),
           );

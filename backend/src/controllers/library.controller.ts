@@ -8,6 +8,7 @@ import {
   getLibraryStatus,
   updateOccupiedSeats,
   getAllStudentsInside,
+  getStudentsInsideWithEntryTime,
   getScanLogs,
   resetLibrarySystem,
   runInTransaction,
@@ -99,6 +100,9 @@ export const processScan = async (req: Request, res: Response) => {
         id: updatedStudent.id,
         name: updatedStudent.name,
         status: updatedStudent.current_status,
+        course: (updatedStudent as any).degree || (updatedStudent as any).course || null,
+        semester: (updatedStudent as any).semester || null,
+        phone: (updatedStudent as any).phone || null,
       },
       libraryStatus: {
         totalSeats: libraryStatus.totalSeats,
@@ -142,11 +146,23 @@ export const getLibraryStatusController = async (_req: Request, res: Response) =
 
 export const getStudentsInsideController = async (_req: Request, res: Response) => {
   try {
-    const students = await getAllStudentsInside();
+    // Use enriched query that includes real entry time from scan_logs
+    const students = await getStudentsInsideWithEntryTime();
 
     return res.status(200).json({
       success: true,
-      data: students,
+      data: students.map(s => ({
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        current_status: s.current_status,
+        scan_count: s.scan_count,
+        created_at: s.created_at,
+        entryTime: s.entryTime,
+        course: (s as any).degree || (s as any).course || null,
+        semester: (s as any).semester || null,
+        phone: (s as any).phone || null,
+      })),
       count: students.length,
     });
   } catch (error) {
@@ -201,12 +217,12 @@ export const getSeatMap = async (_req: Request, res: Response) => {
   try {
     // Get library config for total seats
     const status = await getLibraryStatus();
-    const totalSeats = status?.totalSeats || 100;
+    const totalSeats = status?.totalSeats || 350;
     
-    // Get students currently inside
-    const students = await getAllStudentsInside();
+    // Get students with REAL entry times from scan_logs
+    const students = await getStudentsInsideWithEntryTime();
     
-    // Generate seat grid (10x10 for 100 seats, or adjust based on total)
+    // Generate seat grid (10x10 per zone)
     const cols = 10;
     const rows = Math.ceil(totalSeats / cols);
     
@@ -217,7 +233,6 @@ export const getSeatMap = async (_req: Request, res: Response) => {
       const rowSeats = [];
       for (let col = 0; col < cols; col++) {
         if (seatNumber <= totalSeats) {
-          // Assign student to seat if available
           const studentIndex = seatNumber - 1;
           const student = studentIndex < students.length ? students[studentIndex] : null;
           
@@ -228,7 +243,9 @@ export const getSeatMap = async (_req: Request, res: Response) => {
             status: student ? 'OCCUPIED' : 'AVAILABLE',
             student: student ? {
               id: student.id,
-              name: student.name
+              name: student.name,
+              entryTime: student.entryTime,
+              course: (student as any).degree || (student as any).course || null,
             } : null
           });
           seatNumber++;
