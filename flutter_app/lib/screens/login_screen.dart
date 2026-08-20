@@ -231,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen>
                               Container(
                                 decoration: BoxDecoration(
                                   color: AppTheme.surfaceVariant,
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: const BorderRadius.all(Radius.circular(14)),
                                 ),
                                 padding: const EdgeInsets.all(4),
                                 child: Row(
@@ -251,7 +251,7 @@ class _LoginScreenState extends State<LoginScreen>
                                                 ? AppTheme.primaryBlue
                                                 : Colors.transparent,
                                             borderRadius:
-                                                BorderRadius.circular(10),
+                                                const BorderRadius.all(Radius.circular(10)),
                                             boxShadow: _selectedRole ==
                                                     UserRole.student
                                                 ? [
@@ -310,7 +310,7 @@ class _LoginScreenState extends State<LoginScreen>
                                                     ? AppTheme.primaryBlue
                                                     : Colors.transparent,
                                             borderRadius:
-                                                BorderRadius.circular(10),
+                                                const BorderRadius.all(Radius.circular(10)),
                                             boxShadow: _selectedRole ==
                                                     UserRole.admin
                                                 ? [

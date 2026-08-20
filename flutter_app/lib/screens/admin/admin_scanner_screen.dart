@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import '../../providers/library_provider.dart';
 import '../../config/theme_config.dart';
+import '../../models/scan_log.dart';
 
 class AdminScannerScreen extends StatefulWidget {
   const AdminScannerScreen({super.key});
@@ -332,7 +333,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
     );
   }
 
-  Widget _buildRecentScanItem(log) {
+  Widget _buildRecentScanItem(ScanLog log) {
     final isEntry = log.scanType == 'ENTRY';
     final color = isEntry ? AppTheme.accentGreen : AppTheme.accentAmber;
     final icon = isEntry ? Icons.login : Icons.logout;
@@ -342,7 +343,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
       ),
       child: Row(
         children: [
@@ -353,7 +354,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  log.studentId ?? 'Unknown',
+                  log.studentId,
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     color: AppTheme.textPrimary,
@@ -373,7 +374,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
             ),
             child: Text(
               isEntry ? 'IN' : 'OUT',

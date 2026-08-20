@@ -36,7 +36,7 @@ class SeatMapWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -66,7 +66,7 @@ class SeatMapWidget extends StatelessWidget {
           height: 16,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
           ),
         ),
         const SizedBox(width: 6),
@@ -201,18 +201,19 @@ class SeatMapWidget extends StatelessWidget {
         // Row number spacer
         const SizedBox(width: 40),
         // Column letters
-        ...headers.map((header) => Expanded(
-              child: Center(
-                child: Text(
-                  header,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textTertiary,
-                  ),
+        for (final header in headers)
+          Expanded(
+            child: Center(
+              child: Text(
+                header,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textTertiary,
                 ),
               ),
-            )),
+            ),
+          ),
       ],
     );
   }
@@ -235,9 +236,10 @@ class SeatMapWidget extends StatelessWidget {
           ),
         ),
         // Seat cells
-        ...row.map((seat) => Expanded(
-              child: _buildSeatCell(seat),
-            )),
+        for (final seat in row)
+          Expanded(
+            child: _buildSeatCell(seat),
+          ),
       ],
     );
   }
