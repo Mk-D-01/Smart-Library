@@ -67,7 +67,7 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Enter student ID manually when hardware scanner is unavailable',
+                      'Enter student ID manually or use camera to scan student QR code',
                       style: TextStyle(
                           fontSize: 13, color: AppTheme.textSecondary),
                     ),

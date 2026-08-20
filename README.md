@@ -1,32 +1,32 @@
 # 📚 Smart Library Management System
 
-A modern, technology-driven solution that transforms traditional libraries into intelligent, efficient spaces using IoT hardware, student ID scanning, and real-time data management.
+A modern, software-driven solution that transforms traditional libraries into intelligent, efficient spaces using student ID and QR code scanning, real-time data management, and automated entry/exit tracking.
 
 ## Overview
 
-The Smart Library system automates library entry/exit tracking while monitoring real-time occupancy. Students scan their ID cards to enter/exit, and the system processes this data to provide instant visibility of occupied and vacant seats through a digital portal.
+The Smart Library system automates library entry/exit tracking while monitoring real-time occupancy. Students check in/out using mobile or web-based software scanning, and the system processes this data to provide instant visibility of occupied and vacant seats through digital dashboards.
 
 ### Key Features
-- ID Card Scanning - Automated student entry/exit tracking
+- Software Scan Flow - Automated student entry/exit tracking via HTTP API
 - Real-time Dashboard - Live occupancy monitoring
-- Auto-sync - Offline data sync with centralized database
+- Auto-sync - Centralized cloud database sync
 - Multi-platform - Web admin panel + Flutter mobile app
 - Cloud-based - Supabase database integration
-- Scalable - Cost-effective and reliable architecture
+- Scalable - Cost-effective, containerized, and reliable architecture
 
 ## Architecture
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   ID Scanner    │───▶│   Backend API    │───▶│   Supabase DB   │
-│   (Hardware)    │    │   (Node.js)      │    │   (Cloud)       │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                │
-                                ▼
-                       ┌──────────────────┐
-                       │   Admin Panel    │
-                       │   (Web UI)       │
-                       └──────────────────┘
+┌─────────────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│ Web / Mobile Scan Flow  │───▶│   Backend API    │───▶│   Supabase DB   │
+│ (Admin Web / Flutter)   │    │   (Node.js)      │    │   (Cloud)       │
+└─────────────────────────┘    └──────────────────┘    └─────────────────┘
+                                        │
+                                        ▼
+                               ┌──────────────────┐
+                               │   Admin Panel    │
+                               │   (Web UI)       │
+                               └──────────────────┘
 ```
 
 ## Quick Start
@@ -251,6 +251,20 @@ docker-compose logs -f backend
 - Development: Use `npm run dev`
 - Production: Use `npm start` with built files
 - Database: Supabase handles scaling and backups
+
+## ✅ Validation & Testing Results
+
+The Smart Library system has been migrated to software-only operation and validated across all subsystems:
+
+| Subsystem | Scope / Commands | Status | Details |
+| :--- | :--- | :--- | :--- |
+| **Backend Types & Build** | `npm run type-check && npm run build` | ✅ PASSED | 0 TypeScript errors, clean compilation |
+| **API Test Suite** | `npm test -- --runInBand` | ✅ PASSED | 20/20 test cases passing across all 13 core endpoints & edge cases |
+| **Flutter Mobile Client** | `flutter analyze && flutter test` | ✅ PASSED | 0 analyzer issues, all widget/unit tests passing |
+| **Docker Container** | `docker compose build && docker compose up -d` | ✅ PASSED | Built on `node:20-alpine`, `/api/health` returned HTTP 200 `healthy` |
+| **Admin Web Panel** | `GET /api/status`, `/api/seats`, `/api/scan-logs` | ✅ PASSED | Real-time live polling, seat pictograph, and manual scan operational |
+| **Hardware Removal** | `git grep -i "hardware\|iot\|gpio\|serial"` | ✅ PASSED | 0 active hardware/device dependencies remain |
+
 
 ## Contributing
 

@@ -1,17 +1,20 @@
-# Library Management System - Backend API
+# Smart Library Management System - Backend API
 
-A complete Node.js + TypeScript backend for a library management system with Express.js and SQLite.
+A robust Node.js + TypeScript backend for the Smart Library management system powered by Express.js and Supabase PostgreSQL.
 
 ## Features
 
-- ✅ Express.js server with TypeScript
-- ✅ SQLite database (better-sqlite3)
-- ✅ RESTful API for Books and Members
-- ✅ CORS enabled for Flutter app
-- ✅ Input validation middleware
-- ✅ Error handling middleware
-- ✅ Environment variables support
-- ✅ Type-safe with TypeScript
+- Express.js server with TypeScript
+- Cloud database integration with Supabase (PostgreSQL)
+- Software-based student entry/exit scan tracking (`POST /api/scan`)
+- Real-time library occupancy & seat map matrix (`GET /api/seats`, `GET /api/status`)
+- Duplicate scan cooldown protection (5 seconds)
+- Automated student registration on first scan
+- Access expiry date & status validation
+- Admin system reset endpoint (`POST /api/reset`)
+- CORS enabled for Admin Web Panel and Flutter Mobile App
+- Comprehensive Jest & Supertest integration test suite
+- Docker containerization support
 
 ## Project Structure
 
@@ -19,20 +22,29 @@ A complete Node.js + TypeScript backend for a library management system with Exp
 backend/
 ├── src/
 │   ├── config/
-│   │   └── database.ts          # Database configuration and initialization
+│   │   └── database.ts          # Supabase client configuration & initialization
 │   ├── models/
 │   │   └── library.model.ts     # Data models and database operations
 │   ├── controllers/
-│   │   └── library.controller.ts # Request handlers
+│   │   └── library.controller.ts # API request handlers
 │   ├── routes/
-│   │   └── library.routes.ts    # API route definitions
+│   │   └── library.routes.ts    # Library API route definitions
 │   ├── middleware/
-│   │   └── errorHandler.ts      # Error handling middleware
-│   └── server.ts                # Main server file
-├── .env.example                 # Environment variables template
+│   │   └── errorHandler.ts      # Global error and 404 handling middleware
+│   ├── utils/
+│   │   └── access_expiry.ts     # Access expiry calculations and validation
+│   ├── types/
+│   │   └── library.types.ts     # TypeScript interfaces and types
+│   ├── tests/
+│   │   ├── library.test.ts      # Comprehensive API integration test suite
+│   │   ├── simple.test.ts       # CI smoke test
+│   │   └── setup.ts            # Test environment configuration
+│   └── server.ts                # Main Express server entry point
+├── Dockerfile                   # Production Dockerfile
+├── Dockerfile.fresh             # Development/Compose Dockerfile
 ├── package.json                 # Dependencies and scripts
 ├── tsconfig.json                # TypeScript configuration
-└── README.md                    # This file
+└── README.md                    # Backend documentation
 ```
 
 ## Setup Instructions
@@ -41,23 +53,18 @@ backend/
 
 ```bash
 cd backend
-npm install
+npm ci
 ```
 
 ### 2. Configure Environment Variables
 
-Copy `.env.example` to `.env`:
+Create `backend/.env` with your Supabase credentials:
 
-```bash
-cp .env.example .env
-```
-
-Or create `.env` manually with:
-
-```
+```env
 PORT=3000
 NODE_ENV=development
-DB_PATH=./library.db
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your-supabase-service-role-key
 ```
 
 ### 3. Run the Server
@@ -65,6 +72,11 @@ DB_PATH=./library.db
 **Development mode (with auto-reload):**
 ```bash
 npm run dev
+```
+
+**Type Check:**
+```bash
+npm run type-check
 ```
 
 **Build TypeScript:**
@@ -77,93 +89,36 @@ npm run build
 npm start
 ```
 
-The server will start on `http://localhost:3000`
+The server starts on `http://localhost:3000`.
+
+### 4. Run Tests
+
+```bash
+# Run complete test suite
+npm test -- --runInBand
+```
 
 ## API Endpoints
 
-### Books
+### System & Health
 
-- `GET /api/books` - Get all books
-- `GET /api/books/:id` - Get book by ID
-- `POST /api/books` - Create a new book
-- `PUT /api/books/:id` - Update a book
-- `DELETE /api/books/:id` - Delete a book
+- `GET /` - API index and endpoint catalog
+- `GET /api/health` - Server health check and uptime
 
-### Members
+### Library Operations
 
-- `GET /api/members` - Get all members
-- `GET /api/members/:id` - Get member by ID
-- `POST /api/members` - Create a new member
-- `PUT /api/members/:id` - Update a member
-- `DELETE /api/members/:id` - Delete a member
+- `GET /api/status` - Live occupancy metrics (total, occupied, available seats, occupancy rate)
+- `POST /api/scan` - Process software student scan (even scan count = ENTRY, odd = EXIT)
+- `GET /api/student/:studentId` - Look up student profile by ID
+- `GET /api/students-inside` - List all students currently inside
+- `GET /api/scan-logs` - Query recent scan history (supports `?limit=N`)
+- `GET /api/seats` - Dynamic 2D seat map grid with occupant details
+- `POST /api/reset` - Reset library occupancy and mark all students as outside
 
-### Health Check
+## Database Schema (Supabase)
 
-- `GET /` - API information
-- `GET /health` - Health check endpoint
+The system utilizes Supabase PostgreSQL with the following core tables:
 
-## Example API Requests
-
-### Create a Book
-
-```bash
-POST http://localhost:3000/api/books
-Content-Type: application/json
-
-{
-  "title": "The Great Gatsby",
-  "author": "F. Scott Fitzgerald",
-  "isbn": "978-0-7432-7356-5",
-  "category": "Fiction",
-  "published_year": 1925,
-  "total_copies": 5,
-  "available_copies": 5
-}
-```
-
-### Create a Member
-
-```bash
-POST http://localhost:3000/api/members
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "phone": "+1234567890",
-  "address": "123 Main St, City, State"
-}
-```
-
-## Database Schema
-
-The database automatically creates three tables:
-
-1. **books** - Stores book information
-2. **members** - Stores member information
-3. **transactions** - Stores borrow/return transactions (ready for future implementation)
-
-## Technologies Used
-
-- **Express.js** - Web framework
-- **TypeScript** - Type-safe JavaScript
-- **better-sqlite3** - SQLite database driver
-- **CORS** - Cross-Origin Resource Sharing
-- **dotenv** - Environment variable management
-- **nodemon** - Development auto-reload
-
-## Development
-
-- The database file (`library.db`) will be created automatically on first run
-- All TypeScript files are in the `src/` directory
-- Compiled JavaScript files will be in the `dist/` directory
-- Use `npm run dev` for development with auto-reload
-- Use `npm run build` to compile TypeScript before production
-
-## Notes
-
-- The database is initialized automatically when the server starts
-- Foreign keys are enabled for referential integrity
-- All timestamps are automatically managed
-- Input validation is handled in controllers
-- Error handling middleware catches all errors
+1. **`library_config`** - Library configuration (total seats, occupied seats, last updated timestamp)
+2. **`students`** - Student records (id, name, email, current_status, scan_count, access_expiry_date, is_active)
+3. **`scan_logs`** - Historical scan log events (id, student_id, scan_type: ENTRY/EXIT, timestamp)
