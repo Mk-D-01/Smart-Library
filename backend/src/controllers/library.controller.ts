@@ -7,7 +7,6 @@ import {
   getLastScan,
   getLibraryStatus,
   updateOccupiedSeats,
-  getAllStudentsInside,
   getStudentsInsideWithEntryTime,
   getScanLogs,
   resetLibrarySystem,
