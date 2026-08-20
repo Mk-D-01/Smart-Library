@@ -405,7 +405,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -421,7 +421,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
             ),
             child: Icon(icon, color: color, size: 20),
           ),
@@ -449,18 +449,18 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Provider.of<AuthProvider>(context, listen: false).logout();
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await Provider.of<AuthProvider>(context, listen: false).logout();
             },
             child: const Text('Logout'),
           ),

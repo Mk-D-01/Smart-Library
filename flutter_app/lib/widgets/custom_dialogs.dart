@@ -18,8 +18,8 @@ class SuccessDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
       contentPadding: EdgeInsets.zero,
       content: Column(
@@ -42,7 +42,7 @@ class SuccessDialog extends StatelessWidget {
                   height: 60,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: const BorderRadius.all(Radius.circular(30)),
                   ),
                   child: const Icon(
                     Icons.check_circle,
@@ -87,8 +87,8 @@ class SuccessDialog extends StatelessWidget {
                       backgroundColor: AppTheme.accentGreen,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
                     ),
                     child: Text(
@@ -126,8 +126,8 @@ class ErrorDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
       contentPadding: EdgeInsets.zero,
       content: Column(
@@ -157,7 +157,7 @@ class ErrorDialog extends StatelessWidget {
                   height: 60,
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: const BorderRadius.all(Radius.circular(30)),
                   ),
                   child: const Icon(
                     Icons.error,
@@ -202,8 +202,8 @@ class ErrorDialog extends StatelessWidget {
                       backgroundColor: AppTheme.accentRed,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8)),
                       ),
                     ),
                     child: Text(
@@ -247,8 +247,8 @@ class ConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
       title: Row(
         children: [

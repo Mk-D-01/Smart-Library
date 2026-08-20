@@ -175,10 +175,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen>
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
+              final nav = Navigator.of(context);
               Navigator.pop(dialogContext);
-              Provider.of<AuthProvider>(context, listen: false).logout();
-              Navigator.pushReplacementNamed(context, '/login');
+              await Provider.of<AuthProvider>(context, listen: false).logout();
+              if (context.mounted) {
+                nav.pushReplacementNamed('/login');
+              }
             },
             child: const Text('Logout'),
           ),
