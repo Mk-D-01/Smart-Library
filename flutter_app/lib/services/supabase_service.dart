@@ -21,7 +21,7 @@ class SupabaseService {
           .limit(1)
           .single();
 
-      final totalSeats = response['total_seats'] ?? 100;
+      final totalSeats = response['total_seats'] ?? 400;
       final occupiedSeats = response['occupied_seats'] ?? 0;
       final availableSeats = totalSeats - occupiedSeats;
       final occupancyPercentage =
@@ -37,9 +37,9 @@ class SupabaseService {
       debugPrint('Error getting library status: $e');
       // Return default status if config doesn't exist
       return LibraryStatus(
-        totalSeats: 100,
+        totalSeats: 400,
         occupiedSeats: 0,
-        availableSeats: 100,
+        availableSeats: 400,
         occupancyPercentage: 0,
       );
     }
@@ -476,7 +476,7 @@ class SupabaseService {
           .limit(1)
           .single();
 
-      final totalSeats = config['total_seats'] ?? 100;
+      final totalSeats = config['total_seats'] ?? 400;
 
       // Get students currently inside
       final students = await getStudentsInside();
@@ -530,9 +530,9 @@ class SupabaseService {
       // Return default empty seat map
       return SeatMap.fromJson({
         'seats': [],
-        'totalSeats': 100,
+        'totalSeats': 400,
         'occupiedSeats': 0,
-        'availableSeats': 100,
+        'availableSeats': 400,
         'occupancyRate': 0,
         'rows': 10,
         'cols': 10,

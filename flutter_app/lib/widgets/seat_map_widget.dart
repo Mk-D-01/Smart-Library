@@ -25,7 +25,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
     {'zone': 1, 'label': 'Zone 1', 'range': '1–100', 'desc': 'Ground Floor • North'},
     {'zone': 2, 'label': 'Zone 2', 'range': '101–200', 'desc': 'Floor 1 • East Wing'},
     {'zone': 3, 'label': 'Zone 3', 'range': '201–300', 'desc': 'Floor 2 • West Wing'},
-    {'zone': 4, 'label': 'Zone 4', 'range': '301–350', 'desc': 'Floor 3 • Silent Study'},
+    {'zone': 4, 'label': 'Zone 4', 'range': '301–400', 'desc': 'Floor 3 • Silent Study'},
   ];
 
   @override
@@ -84,7 +84,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Library Zones (350 Seats)',
+                    'Library Zones (400 Seats)',
                     style: TextStyle(
                       color: isDark ? Colors.white : AppTheme.textPrimary,
                       fontSize: 13,
@@ -249,7 +249,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
         Expanded(
           child: _statCard(
             'Total',
-            '350',
+            '400',
             isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.4) : Colors.blue.shade50,
             isDark ? const Color(0xFF93C5FD) : Colors.blue.shade700,
             isDark,
@@ -326,7 +326,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
 
   Widget _buildSeatGrid(bool isDark) {
     final zoneOffset = (_selectedZone - 1) * 100;
-    const totalCapacity = 350;
+    const totalCapacity = 400;
 
     return Container(
       decoration: BoxDecoration(

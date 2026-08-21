@@ -17,7 +17,7 @@ const CONFIG = {
     DEBOUNCE_DELAY: 500,            // Debounce delay for API calls
     
     // Library Configuration
-    TOTAL_SEATS: 350,                // Total number of seats in library
+    TOTAL_SEATS: 400,                // Total number of seats in library
     SEAT_GRID_ROWS: 10,             // Seat grid visualization rows
     SEAT_GRID_COLS: 10,             // Seat grid visualization columns
     

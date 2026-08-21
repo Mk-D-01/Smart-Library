@@ -156,7 +156,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                     Expanded(
                       child: _buildStatCard(
                         'Available',
-                        '${(status?.totalSeats ?? 100) - studentsInside.length}',
+                        '${(status?.totalSeats ?? 400) - studentsInside.length}',
                         Icons.check_circle,
                         AppTheme.accentGreen,
                       ),
@@ -165,9 +165,9 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                     Expanded(
                       child: _buildStatCard(
                         'Occupancy',
-                        '${((studentsInside.length / (status?.totalSeats ?? 100)) * 100).toStringAsFixed(1)}%',
+                        '${((studentsInside.length / (status?.totalSeats ?? 400)) * 100).toStringAsFixed(1)}%',
                         Icons.pie_chart,
-                        ((studentsInside.length / (status?.totalSeats ?? 100)) *
+                        ((studentsInside.length / (status?.totalSeats ?? 400)) *
                                     100) >=
                                 80
                             ? AppTheme.accentRed
@@ -229,7 +229,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'See pictograph of all ${status?.totalSeats ?? 100} seats',
+                                'See pictograph of all ${status?.totalSeats ?? 400} seats',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.8),
                                   fontSize: 13,
