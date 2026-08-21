@@ -46,15 +46,15 @@ async function getLibraryStatus() {
     if (error || !data) {
       // Return default config if none exists
       return {
-        totalSeats: 100,
+        totalSeats: 400,
         occupiedSeats: 0,
-        availableSeats: 100,
+        availableSeats: 400,
         occupancyPercentage: 0
       };
     }
     
     const occupiedSeats = data.occupied_seats || 0;
-    const totalSeats = data.total_seats || 100;
+    const totalSeats = data.total_seats || 400;
     const availableSeats = totalSeats - occupiedSeats;
     const occupancyPercentage = Math.round((occupiedSeats / totalSeats) * 100);
     
@@ -67,9 +67,9 @@ async function getLibraryStatus() {
   } catch (error) {
     console.error('Error getting library status:', error);
     return {
-      totalSeats: 100,
+      totalSeats: 400,
       occupiedSeats: 0,
-      availableSeats: 100,
+      availableSeats: 400,
       occupancyPercentage: 0
     };
   }

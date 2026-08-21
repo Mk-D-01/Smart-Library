@@ -16,9 +16,9 @@ class LibraryStatus {
 
   factory LibraryStatus.fromJson(Map<String, dynamic> json) {
     return LibraryStatus(
-      totalSeats: json['totalSeats'] ?? 100,
+      totalSeats: json['totalSeats'] ?? 400,
       occupiedSeats: json['occupiedSeats'] ?? 0,
-      availableSeats: json['availableSeats'] ?? 100,
+      availableSeats: json['availableSeats'] ?? 400,
       occupancyPercentage: (json['occupancyPercentage'] ?? json['occupancyRate'] ?? 0).toDouble(),
     );
   }

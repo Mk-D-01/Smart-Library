@@ -14,14 +14,7 @@ class AdminSettingsScreen extends StatefulWidget {
 }
 
 class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
-  final TextEditingController _seatsController = TextEditingController();
   bool _isClearing = false;
-
-  @override
-  void dispose() {
-    _seatsController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -101,12 +94,7 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                       leading: const Icon(Icons.event_seat),
                       title: const Text('Total Seats'),
                       subtitle:
-                          Text('Currently: ${status?.totalSeats ?? 0} seats'),
-                      trailing: TextButton(
-                        onPressed: () => _showUpdateSeatsDialog(
-                            provider, status?.totalSeats ?? 100),
-                        child: const Text('Update'),
-                      ),
+                          Text('Fixed: ${status?.totalSeats ?? 400} seats (4 Zones × 100 Seats)'),
                     ),
                     const Divider(),
                     ListTile(
@@ -297,74 +285,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
           Text(value,
               style: TextStyle(
                   color: AppTheme.textPrimary, fontWeight: FontWeight.w500)),
-        ],
-      ),
-    );
-  }
-
-  void _showUpdateSeatsDialog(LibraryProvider provider, int currentSeats) {
-    _seatsController.text = currentSeats.toString();
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Update Total Seats'),
-        content: TextField(
-          controller: _seatsController,
-          decoration: const InputDecoration(
-            labelText: 'Total Seats',
-            hintText: 'Enter number of seats',
-            prefixIcon: Icon(Icons.event_seat),
-          ),
-          keyboardType: TextInputType.number,
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              final seats = int.tryParse(_seatsController.text.trim());
-              if (seats == null || seats <= 0) {
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  const SnackBar(
-                      content: Text('Please enter a valid number'),
-                      backgroundColor: AppTheme.accentRed),
-                );
-                return;
-              }
-
-              Navigator.pop(dialogContext);
-              try {
-                final success =
-                    await provider.updateLibrarySettings(totalSeats: seats);
-                if (!mounted) return;
-                if (!success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Failed to update total seats'),
-                        backgroundColor: AppTheme.accentRed),
-                  );
-                  return;
-                }
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text('Total seats updated to $seats'),
-                      backgroundColor: AppTheme.accentGreen),
-                );
-              } catch (e) {
-                if (!mounted) return;
-                final String details = e.toString().replaceFirst('Exception: ', '');
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text('Failed to update total seats: $details'),
-                      backgroundColor: AppTheme.accentRed,
-                      duration: const Duration(seconds: 5)),
-                );
-              }
-            },
-            child: const Text('Update'),
-          ),
         ],
       ),
     );

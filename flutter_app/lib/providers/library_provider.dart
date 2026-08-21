@@ -41,7 +41,7 @@ class LibraryProvider with ChangeNotifier {
 
   // Sync library status from ground truth (_studentsInside)
   void _syncLibraryStatus() {
-    final totalSeats = _libraryStatus?.totalSeats ?? 100;
+    final totalSeats = _libraryStatus?.totalSeats ?? 400;
     final occupiedSeats = _studentsInside.length;
     final availableSeats = totalSeats - occupiedSeats;
     final occupancyPercentage =
@@ -186,9 +186,9 @@ class LibraryProvider with ChangeNotifier {
           student: student,
           libraryStatus: _libraryStatus ??
               LibraryStatus(
-                totalSeats: 100,
+                totalSeats: 400,
                 occupiedSeats: 0,
-                availableSeats: 100,
+                availableSeats: 400,
                 occupancyPercentage: 0,
               ),
         );
