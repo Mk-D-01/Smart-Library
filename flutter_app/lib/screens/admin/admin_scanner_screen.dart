@@ -417,7 +417,8 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
         _manualController.clear();
       }
     } catch (e) {
-      _showError('Scan failed: $e');
+      debugPrint('Scan failed: $e');
+      _showError('Scan failed. Please try again.');
     } finally {
       if (mounted) {
         setState(() {
