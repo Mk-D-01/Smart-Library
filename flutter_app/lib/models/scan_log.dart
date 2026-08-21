@@ -29,9 +29,9 @@ class ScanLog {
     final now = DateTime.now();
     // If the parsed timestamp is in the future by more than 1 minute,
     // it was saved as a local time string into a UTC column (offset added twice).
-    // Compensate by subtracting the device's timezone offset.
+    // Compensate by subtracting the timestamp's timezone offset (DST-safe).
     if (dt.isAfter(now.add(const Duration(minutes: 1)))) {
-      dt = dt.subtract(now.timeZoneOffset);
+      dt = dt.subtract(dt.timeZoneOffset);
     }
     return dt;
   }
