@@ -59,12 +59,19 @@ This tracker maintains a weekly record of completed deliverables, active milesto
 #### 3. Student Portal Dark Theme & Navigation Fixes
 - [x] **Fixed Student Login & Route Navigation:** Removed broken delayed `pushReplacementNamed('/student')` from `login_screen.dart` to allow reactive `AuthWrapper` to manage transition seamlessly to `AppNavigation`.
 - [x] **Dark Mode in Student Portal:** Connected `StudentProfileScreen`'s dark mode toggle to `ThemeProvider.setDarkMode()`, added a direct theme toggle button in `StudentDashboardScreen` and `StudentHistoryScreen` AppBars, and wrapped `AppNavigation` in `Consumer<ThemeProvider>` for instantaneous app-wide theme switching.
-- [x] **Student Multi-Zone Seats Tab:** Added dedicated `StudentSeatsScreen` with `SeatMapWidget` to student navigation tabs for full interactive 350-seat floorplan access.
+#### 4. Timezone Drift Normalization, Live Timestamp Synchronization & Seat Allocation Hardening (fix/time-issue)
+- [x] **Timezone Offset & Future Timestamp Normalization (`scan_log.dart`, `student.dart`):** Engineered smart self-healing parsers `ScanLog.parseTimestamp()` and `Student.parseDateTime()` to detect and correct UTC/local double-addition offsets (+5:30 IST drift) where local device time was stored into UTC database columns. Normalized erroneous future timestamps (e.g. `04:59 AM` $\rightarrow$ `11:29 PM`) and restored live elapsed relative durations (`Just now`, `15s ago`, `2m ago`, `1h ago`).
+- [x] **Consistent UTC Database Writes (`supabase_service.dart`, `library_provider.dart`):** Converted all scan logs, check-ins, force exits, and config write operations to explicitly emit standard UTC timestamps (`DateTime.now().toUtc().toIso8601String()`).
+- [x] **Seat Grid Allocation & Chronological Seat Persistence (`supabase_service.dart`):** Resolved the seat-shifting bug where new arrivals took Seat #1 and pushed all existing students forward (+1). Implemented ascending chronological entry-time sorting in `getSeatMap()`, guaranteeing existing students retain their assigned desks (Seats 1, 2, 3...) and new students occupy the next available empty seat (Seat 4...).
+- [x] **Removed Randomized Demo Fallback & Connected Live Seat Details (`seat_map_widget.dart`):** Replaced static mock generator `((deskNumber * 13 + 7) % 160 + 2)` with real student profile lookup from `widget.seatMap.seats`. Seat modal now displays exact check-in clock time (e.g. `11:29 PM`) and real ticking session duration (`25s`, `3m 15s`, `1h 20m`).
+- [x] **Scanner Screen Database Hook & Recent Activity Synchronization (`admin_scanner_screen.dart`, `supabase_service.dart`, `admin_overview_screen.dart`):** Replaced dummy scanner timer with real `LibraryProvider.processScan()` dispatch, writing genuine `scan_logs` and `students` records on QR/manual scan. Implemented in-memory descending sort by normalized local timestamp in `getScanLogs()` to ensure newly scanned students immediately appear at the top of Recent Activity.
+- [x] **Zero-Error Analyzer Verification:** Validated the complete Flutter codebase with `flutter analyze` achieving 0 errors and 0 warnings.
 
+---
 
 ## 👤 Contributor: Dhruv & Gaurang
 
-🗓️ Week: Smart Library Frontend Code Quality & Analyzer Cleanup Sprint (August 2026)
+### 🗓️ Week: Smart Library Frontend Code Quality & Analyzer Cleanup Sprint (August 2026)
 
 1. Compile-Time const Performance & Memory Optimization
 [x]Theme & Input Decoration Optimization (theme_config.dart): Added const modifiers to compile-time OutlineInputBorder, RoundedRectangleBorder, and DialogThemeData instances across Light and Dark themes without altering visual behavior.
