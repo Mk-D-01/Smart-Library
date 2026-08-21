@@ -16,7 +16,7 @@ void main() async {
   // Initialize Supabase
   await Supabase.initialize(
     url: SupabaseConfig.url,
-    publishableKey: SupabaseConfig.anonKey,
+    anonKey: SupabaseConfig.anonKey,
   );
   
   // Set status bar style

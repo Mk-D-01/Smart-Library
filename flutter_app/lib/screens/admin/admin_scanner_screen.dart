@@ -455,13 +455,17 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
     try {
       DateTime dateTime;
       if (timestamp is DateTime) {
-        dateTime = timestamp;
+        dateTime = timestamp.toLocal();
       } else if (timestamp is String) {
-        dateTime = DateTime.parse(timestamp);
+        dateTime = DateTime.parse(timestamp).toLocal();
       } else {
         return 'Unknown';
       }
-      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      final hour = dateTime.hour;
+      final minute = dateTime.minute.toString().padLeft(2, '0');
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+      return '${displayHour.toString().padLeft(2, '0')}:$minute $period';
     } catch (e) {
       return 'Unknown';
     }

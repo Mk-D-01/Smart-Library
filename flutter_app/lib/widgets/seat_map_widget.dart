@@ -699,6 +699,35 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                         const SizedBox(height: 12),
                         const Divider(height: 1),
                         const SizedBox(height: 12),
+                        if (entryDateTime != null) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Check-in Time',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.grey.shade400 : AppTheme.textSecondary,
+                                ),
+                              ),
+                              Text(
+                                () {
+                                  final hour = entryDateTime.hour;
+                                  final minute = entryDateTime.minute.toString().padLeft(2, '0');
+                                  final period = hour >= 12 ? 'PM' : 'AM';
+                                  final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+                                  return '${displayHour.toString().padLeft(2, '0')}:$minute $period';
+                                }(),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : AppTheme.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -713,6 +742,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                               () {
                                 if (entryDateTime != null) {
                                   final diff = DateTime.now().difference(entryDateTime);
+                                  if (diff.isNegative) return '0m';
                                   final hours = diff.inHours;
                                   final mins = diff.inMinutes % 60;
                                   if (hours > 0) return '${hours}h ${mins}m';

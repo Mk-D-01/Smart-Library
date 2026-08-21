@@ -16,9 +16,9 @@ class ScanLog {
     DateTime parsedTimestamp;
     final timestampValue = json['timestamp'];
     if (timestampValue is DateTime) {
-      parsedTimestamp = timestampValue;
+      parsedTimestamp = timestampValue.toLocal();
     } else if (timestampValue is String) {
-      parsedTimestamp = DateTime.parse(timestampValue);
+      parsedTimestamp = DateTime.tryParse(timestampValue)?.toLocal() ?? DateTime.now();
     } else {
       parsedTimestamp = DateTime.now();
     }
@@ -34,14 +34,19 @@ class ScanLog {
   bool get isEntry => scanType == 'ENTRY';
   
   String get formattedTime {
-    return '${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
+    final localTime = timestamp.toLocal();
+    final hour = localTime.hour;
+    final minute = localTime.minute.toString().padLeft(2, '0');
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    return '${displayHour.toString().padLeft(2, '0')}:$minute $period';
   }
   
   String get relativeTime {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
     
-    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.isNegative || difference.inMinutes < 1) return 'Just now';
     if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
     if (difference.inHours < 24) return '${difference.inHours}h ago';
     return '${difference.inDays}d ago';

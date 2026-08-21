@@ -47,7 +47,7 @@ class SupabaseService {
 
   // ============ STUDENTS ============
 
-  /// Get list of students currently inside the library
+  /// Get list of students currently inside the library with real entry timestamps
   Future<List<Student>> getStudentsInside() async {
     try {
       final response = await _client
@@ -56,7 +56,47 @@ class SupabaseService {
           .eq('current_status', 'INSIDE')
           .order('created_at', ascending: false);
 
-      return (response as List).map((json) => Student.fromJson(json)).toList();
+      final List<Map<String, dynamic>> rawList = (response as List)
+          .map((json) => Map<String, dynamic>.from(json as Map))
+          .toList();
+
+      if (rawList.isEmpty) return [];
+
+      final studentIds = rawList
+          .map((s) => s['id']?.toString())
+          .whereType<String>()
+          .toList();
+
+      if (studentIds.isNotEmpty) {
+        try {
+          final logsResponse = await _client
+              .from(SupabaseConfig.scanLogsTable)
+              .select('student_id, timestamp')
+              .filter('student_id', 'in', studentIds)
+              .eq('scan_type', 'ENTRY')
+              .order('timestamp', ascending: false);
+
+          final Map<String, String> entryTimeMap = {};
+          for (final log in (logsResponse as List)) {
+            final sId = log['student_id']?.toString();
+            final ts = log['timestamp']?.toString();
+            if (sId != null && ts != null && !entryTimeMap.containsKey(sId)) {
+              entryTimeMap[sId] = ts;
+            }
+          }
+
+          for (final studentMap in rawList) {
+            final sId = studentMap['id']?.toString();
+            if (sId != null && entryTimeMap.containsKey(sId)) {
+              studentMap['entryTime'] = entryTimeMap[sId];
+            }
+          }
+        } catch (e) {
+          debugPrint('Error fetching scan logs for entry times: $e');
+        }
+      }
+
+      return rawList.map((json) => Student.fromJson(json)).toList();
     } catch (e) {
       debugPrint('Error getting students inside: $e');
       return [];
@@ -514,6 +554,8 @@ class SupabaseService {
                   ? {
                       'id': student.id,
                       'name': student.name,
+                      'entryTime': (student.libraryEntryTime ?? student.updatedAt)?.toIso8601String(),
+                      'course': student.displayCourse,
                     }
                   : null,
             });
