@@ -71,6 +71,7 @@ class LibraryProvider with ChangeNotifier {
       _statusChannel = _supabase.subscribeToLibraryStatus((payload) {
         debugPrint('Library status changed: $payload');
         fetchLibraryStatus();
+        fetchSeatMap();
       });
 
       _logsChannel = _supabase.subscribeToScanLogs((payload) {
@@ -94,6 +95,7 @@ class LibraryProvider with ChangeNotifier {
         fetchLibraryStatus(),
         fetchStudentsInside(),
         fetchScanLogs(),
+        fetchSeatMap(),
         if (studentId != null) fetchStudentScanLogs(studentId),
       ]);
       _isSystemOnline = true;
@@ -228,6 +230,7 @@ class LibraryProvider with ChangeNotifier {
         throw Exception('Update failed');
       }
       await fetchLibraryStatus();
+      await fetchSeatMap();
     } catch (e) {
       debugPrint('Update capacity error: $e');
       throw Exception('Update failed: $e');
@@ -384,11 +387,12 @@ class LibraryProvider with ChangeNotifier {
       );
       if (success) {
         await fetchLibraryStatus();
+        await fetchSeatMap();
       }
       return success;
     } catch (e) {
       debugPrint('Update settings error: $e');
-      return false;
+      rethrow;
     }
   }
 

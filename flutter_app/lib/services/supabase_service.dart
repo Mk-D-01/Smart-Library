@@ -256,17 +256,7 @@ class SupabaseService {
 
   /// Update library capacity
   Future<bool> updateCapacity(int totalSeats) async {
-    try {
-      await _client.from(SupabaseConfig.libraryConfigTable).update({
-        'total_seats': totalSeats,
-        'last_updated': DateTime.now().toIso8601String(),
-      }).neq('id', 0);
-
-      return true;
-    } catch (e) {
-      debugPrint('Error updating capacity: $e');
-      return false;
-    }
+    return updateLibrarySettings(totalSeats: totalSeats);
   }
 
   // ============ REAL-TIME SUBSCRIPTIONS ============
@@ -454,15 +444,34 @@ class SupabaseService {
       if (totalSeats != null) updates['total_seats'] = totalSeats;
       if (occupiedSeats != null) updates['occupied_seats'] = occupiedSeats;
 
-      await _client
+      final response = await _client
           .from(SupabaseConfig.libraryConfigTable)
           .update(updates)
-          .neq('id', 0);
+          .neq('id', 0)
+          .select();
 
-      return true;
+      if ((response as List).isNotEmpty) {
+        return true;
+      }
+
+      // If no rows were updated, attempt upserting default configuration row
+      final upsertResponse = await _client
+          .from(SupabaseConfig.libraryConfigTable)
+          .upsert({
+            'id': 1,
+            'total_seats': totalSeats ?? 100,
+            'occupied_seats': occupiedSeats ?? 0,
+            'last_updated': DateTime.now().toIso8601String(),
+          })
+          .select();
+
+      if ((upsertResponse as List).isNotEmpty) {
+        return true;
+      }
+      throw Exception('No row modified in library_config table.');
     } catch (e) {
       debugPrint('Error updating library settings: $e');
-      return false;
+      rethrow;
     }
   }
 

@@ -335,15 +335,33 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
               }
 
               Navigator.pop(dialogContext);
-              final success =
-                  await provider.updateLibrarySettings(totalSeats: seats);
-              if (!mounted) return;
-              if (!success) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content: Text('Total seats updated to $seats'),
-                    backgroundColor: AppTheme.accentGreen),
-              );
+              try {
+                final success =
+                    await provider.updateLibrarySettings(totalSeats: seats);
+                if (!mounted) return;
+                if (!success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Failed to update total seats'),
+                        backgroundColor: AppTheme.accentRed),
+                  );
+                  return;
+                }
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text('Total seats updated to $seats'),
+                      backgroundColor: AppTheme.accentGreen),
+                );
+              } catch (e) {
+                if (!mounted) return;
+                final String details = e.toString().replaceFirst('Exception: ', '');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text('Failed to update total seats: $details'),
+                      backgroundColor: AppTheme.accentRed,
+                      duration: const Duration(seconds: 5)),
+                );
+              }
             },
             child: const Text('Update'),
           ),
