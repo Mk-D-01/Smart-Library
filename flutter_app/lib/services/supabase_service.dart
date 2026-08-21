@@ -95,9 +95,11 @@ class SupabaseService {
         }
       }
 
-      debugPrint('[getStudentsInside] entryTimeMap: $entryTimeMap');
-      for (final s in rawList) {
-        debugPrint('[getStudentsInside] student ${s['id']}: entryTime=${s['entryTime']}, updated_at=${s['updated_at']}');
+      if (kDebugMode) {
+        debugPrint('[getStudentsInside] entryTimeMap: $entryTimeMap');
+        for (final s in rawList) {
+          debugPrint('[getStudentsInside] student ${s['id']}: entryTime=${s['entryTime']}, updated_at=${s['updated_at']}');
+        }
       }
 
       return rawList.map((json) => Student.fromJson(json)).toList();
