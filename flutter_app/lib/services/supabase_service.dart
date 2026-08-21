@@ -573,7 +573,7 @@ class SupabaseService {
                   ? {
                       'id': student.id,
                       'name': student.name,
-                      'entryTime': (student.libraryEntryTime ?? student.updatedAt)?.toIso8601String(),
+                      'entryTime': (student.libraryEntryTime ?? student.createdAt ?? student.updatedAt)?.toUtc().toIso8601String(),
                       'course': student.displayCourse,
                     }
                   : null,
