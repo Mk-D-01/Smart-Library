@@ -191,10 +191,17 @@ class LibraryProvider with ChangeNotifier {
               ),
         );
       } else {
-        throw Exception(result['error'] ?? 'Scan failed');
+        final errorMsg = result['error']?.toString() ?? 'Scan failed';
+        if (errorMsg.contains('42501') || errorMsg.contains('row-level security')) {
+          throw Exception('Unable to register new student. Database security policy (RLS) restricts student creation.');
+        }
+        throw Exception(errorMsg);
       }
     } catch (e) {
       debugPrint('Scan error: $e');
+      if (e.toString().contains('42501') || e.toString().contains('row-level security')) {
+        throw Exception('Unable to register new student. Database security policy (RLS) restricts student creation.');
+      }
       throw Exception('Scan failed: $e');
     }
   }
