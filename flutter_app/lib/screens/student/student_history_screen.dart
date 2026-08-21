@@ -196,16 +196,25 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
 
   String _formatDateTime(String timestamp) {
     try {
-      final dateTime = DateTime.parse(timestamp);
+      final dateTime = ScanLog.parseTimestamp(timestamp);
       final now = DateTime.now();
-      final difference = now.difference(dateTime);
 
-      if (difference.inDays == 0) {
-        return 'Today, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-      } else if (difference.inDays == 1) {
-        return 'Yesterday, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      final hour = dateTime.hour;
+      final minute = dateTime.minute.toString().padLeft(2, '0');
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+      final formattedTime = '${displayHour.toString().padLeft(2, '0')}:$minute $period';
+
+      final today = DateTime(now.year, now.month, now.day);
+      final itemDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+      final daysDiff = today.difference(itemDate).inDays;
+
+      if (daysDiff == 0) {
+        return 'Today, $formattedTime';
+      } else if (daysDiff == 1) {
+        return 'Yesterday, $formattedTime';
       } else {
-        return '${dateTime.day}/${dateTime.month}/${dateTime.year}, ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+        return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}, $formattedTime';
       }
     } catch (e) {
       return timestamp;

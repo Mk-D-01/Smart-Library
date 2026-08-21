@@ -25,12 +25,27 @@ class Student {
     this.semester,
   });
 
-  // Helper to parse DateTime from various formats
-  static DateTime? _parseDateTime(dynamic value) {
+  /// Robust timestamp parser for Student fields (createdAt, updatedAt, entryTime).
+  /// Compares with device now and corrects for any UTC/local database offset double-addition.
+  static DateTime? parseDateTime(dynamic value) {
     if (value == null) return null;
-    if (value is DateTime) return value;
-    if (value is String) return DateTime.tryParse(value);
-    return null;
+    DateTime dt;
+    if (value is DateTime) {
+      dt = value.toLocal();
+    } else if (value is String) {
+      final parsed = DateTime.tryParse(value);
+      if (parsed == null) return null;
+      dt = parsed.toLocal();
+    } else {
+      return null;
+    }
+
+    final now = DateTime.now();
+    // If the timestamp is in the future by > 1 minute, compensate for local clock stored in UTC column
+    if (dt.isAfter(now.add(const Duration(minutes: 1)))) {
+      dt = dt.subtract(dt.timeZoneOffset);
+    }
+    return dt;
   }
 
   factory Student.fromJson(Map<String, dynamic> json) {
@@ -39,9 +54,9 @@ class Student {
       name: json['name'] ?? 'Student ${json['id']}',
       currentStatus: json['current_status'] ?? 'OUTSIDE',
       scanCount: json['scan_count'] ?? 0,
-      createdAt: _parseDateTime(json['created_at']),
-      updatedAt: _parseDateTime(json['updated_at']),
-      entryTime: _parseDateTime(json['entryTime'] ?? json['entry_time']),
+      createdAt: parseDateTime(json['created_at']),
+      updatedAt: parseDateTime(json['updated_at']),
+      entryTime: parseDateTime(json['entryTime'] ?? json['entry_time']),
       course: json['course']?.toString(),
       degree: json['degree']?.toString(),
       phone: json['phone']?.toString(),

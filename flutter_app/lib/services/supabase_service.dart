@@ -47,7 +47,7 @@ class SupabaseService {
 
   // ============ STUDENTS ============
 
-  /// Get list of students currently inside the library
+  /// Get list of students currently inside the library with real entry timestamps
   Future<List<Student>> getStudentsInside() async {
     try {
       final response = await _client
@@ -56,7 +56,53 @@ class SupabaseService {
           .eq('current_status', 'INSIDE')
           .order('created_at', ascending: false);
 
-      return (response as List).map((json) => Student.fromJson(json)).toList();
+      final List<Map<String, dynamic>> rawList = (response as List)
+          .map((json) => Map<String, dynamic>.from(json as Map))
+          .toList();
+
+      if (rawList.isEmpty) return [];
+
+      // Fetch the most recent ENTRY timestamp for each student from scan_logs
+      final Map<String, String> entryTimeMap = {};
+
+      for (final studentMap in rawList) {
+        final sId = studentMap['id']?.toString();
+        if (sId == null) continue;
+
+        try {
+          final logResponse = await _client
+              .from(SupabaseConfig.scanLogsTable)
+              .select('student_id, timestamp')
+              .eq('student_id', sId)
+              .eq('scan_type', 'ENTRY')
+              .order('timestamp', ascending: false)
+              .limit(1)
+              .maybeSingle();
+
+          if (logResponse != null && logResponse['timestamp'] != null) {
+            entryTimeMap[sId] = logResponse['timestamp'].toString();
+          }
+        } catch (e) {
+          debugPrint('Error fetching entry time for student $sId: $e');
+        }
+      }
+
+      // Attach entry times to student maps
+      for (final studentMap in rawList) {
+        final sId = studentMap['id']?.toString();
+        if (sId != null && entryTimeMap.containsKey(sId)) {
+          studentMap['entryTime'] = entryTimeMap[sId];
+        }
+      }
+
+      if (kDebugMode) {
+        debugPrint('[getStudentsInside] entryTimeMap: $entryTimeMap');
+        for (final s in rawList) {
+          debugPrint('[getStudentsInside] student ${s['id']}: entryTime=${s['entryTime']}, updated_at=${s['updated_at']}');
+        }
+      }
+
+      return rawList.map((json) => Student.fromJson(json)).toList();
     } catch (e) {
       debugPrint('Error getting students inside: $e');
       return [];
@@ -161,7 +207,7 @@ class SupabaseService {
       await _client.from(SupabaseConfig.scanLogsTable).insert({
         'student_id': studentId,
         'scan_type': action,
-        'timestamp': DateTime.now().toIso8601String(),
+        'timestamp': DateTime.now().toUtc().toIso8601String(),
       });
 
       // Update library config
@@ -181,7 +227,7 @@ class SupabaseService {
 
         await _client.from(SupabaseConfig.libraryConfigTable).update({
           'occupied_seats': occupiedSeats,
-          'last_updated': DateTime.now().toIso8601String(),
+          'last_updated': DateTime.now().toUtc().toIso8601String(),
         }).eq('id', configResponse['id']);
       }
 
@@ -217,7 +263,11 @@ class SupabaseService {
       final response =
           await query.order('timestamp', ascending: false).limit(limit);
 
-      return (response as List).map((json) => ScanLog.fromJson(json)).toList();
+      final logs = (response as List).map((json) => ScanLog.fromJson(json)).toList();
+      // Sort in memory by normalized timestamp descending so newly scanned students
+      // appear immediately at the top of Recent Activity
+      logs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      return logs;
     } catch (e) {
       debugPrint('Error getting scan logs: $e');
       return [];
@@ -244,7 +294,7 @@ class SupabaseService {
       // Reset occupied seats
       await _client.from(SupabaseConfig.libraryConfigTable).update({
         'occupied_seats': 0,
-        'last_updated': DateTime.now().toIso8601String(),
+        'last_updated': DateTime.now().toUtc().toIso8601String(),
       }).neq('id', 0);
 
       return true;
@@ -328,7 +378,7 @@ class SupabaseService {
             'email': email ?? '$studentId@student.edu',
             'current_status': 'OUTSIDE',
             'scan_count': 0,
-            'created_at': DateTime.now().toIso8601String(),
+            'created_at': DateTime.now().toUtc().toIso8601String(),
           })
           .select()
           .single();
@@ -374,7 +424,7 @@ class SupabaseService {
 
           await _client.from(SupabaseConfig.libraryConfigTable).update({
             'occupied_seats': occupiedSeats,
-            'last_updated': DateTime.now().toIso8601String(),
+            'last_updated': DateTime.now().toUtc().toIso8601String(),
           }).eq('id', configResponse['id']);
         }
       }
@@ -421,7 +471,7 @@ class SupabaseService {
 
       await _client.from(SupabaseConfig.libraryConfigTable).update({
         'occupied_seats': 0,
-        'last_updated': DateTime.now().toIso8601String(),
+        'last_updated': DateTime.now().toUtc().toIso8601String(),
       }).neq('id', 0);
 
       return true;
@@ -438,7 +488,7 @@ class SupabaseService {
   }) async {
     try {
       final updates = <String, dynamic>{
-        'last_updated': DateTime.now().toIso8601String(),
+        'last_updated': DateTime.now().toUtc().toIso8601String(),
       };
 
       if (totalSeats != null) updates['total_seats'] = totalSeats;
@@ -461,7 +511,7 @@ class SupabaseService {
             'id': 1,
             'total_seats': totalSeats ?? 100,
             'occupied_seats': occupiedSeats ?? 0,
-            'last_updated': DateTime.now().toIso8601String(),
+            'last_updated': DateTime.now().toUtc().toIso8601String(),
           })
           .select();
 
@@ -490,6 +540,15 @@ class SupabaseService {
       // Get students currently inside
       final students = await getStudentsInside();
 
+      // Sort students chronologically by entry time ascending (earliest check-in first)
+      // This ensures earlier students retain their allocated seats (Seat 1, 2, 3...)
+      // and new incoming students take the next empty seat, preventing the +1 shift bug.
+      students.sort((a, b) {
+        final timeA = a.libraryEntryTime ?? a.createdAt ?? DateTime(2000);
+        final timeB = b.libraryEntryTime ?? b.createdAt ?? DateTime(2000);
+        return timeA.compareTo(timeB);
+      });
+
       // Generate seat grid
       const cols = 10;
       final rows = (totalSeats / cols).ceil();
@@ -514,6 +573,8 @@ class SupabaseService {
                   ? {
                       'id': student.id,
                       'name': student.name,
+                      'entryTime': (student.libraryEntryTime ?? student.createdAt ?? student.updatedAt)?.toUtc().toIso8601String(),
+                      'course': student.displayCourse,
                     }
                   : null,
             });
@@ -532,7 +593,7 @@ class SupabaseService {
             totalSeats > 0 ? ((students.length / totalSeats) * 100).round() : 0,
         'rows': rows,
         'cols': cols,
-        'lastUpdated': DateTime.now().toIso8601String(),
+        'lastUpdated': DateTime.now().toUtc().toIso8601String(),
       });
     } catch (e) {
       debugPrint('Error getting seat map: $e');
@@ -545,7 +606,7 @@ class SupabaseService {
         'occupancyRate': 0,
         'rows': 10,
         'cols': 10,
-        'lastUpdated': DateTime.now().toIso8601String(),
+        'lastUpdated': DateTime.now().toUtc().toIso8601String(),
       });
     }
   }

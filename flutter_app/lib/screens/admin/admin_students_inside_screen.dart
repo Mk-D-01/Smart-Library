@@ -263,8 +263,8 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
   }
 
   Widget _buildStudentCard(Student student) {
-    final duration = _calculateDuration((student.updatedAt?.toIso8601String() ??
-        DateTime.now().toIso8601String()));
+    final entryTime = student.libraryEntryTime ?? student.updatedAt ?? student.createdAt;
+    final duration = _calculateDuration(entryTime);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -311,7 +311,7 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        student.id,
+                        '${student.id}${student.displayCourse != null ? ' • ${student.displayCourse}' : ''}',
                         style: TextStyle(
                           fontSize: 14,
                           color: AppTheme.textSecondary,
@@ -341,7 +341,7 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Entry: ${_formatTime((student.updatedAt?.toIso8601String() ?? DateTime.now().toIso8601String()))}',
+                      'Entry: ${_formatTime(entryTime)}',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppTheme.textSecondary,
@@ -391,30 +391,40 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
     );
   }
 
-  String _calculateDuration(String entryTime) {
+  String _calculateDuration(DateTime? entryDateTime) {
+    if (entryDateTime == null) return '0m';
     try {
-      final entry = DateTime.parse(entryTime);
       final now = DateTime.now();
-      final difference = now.difference(entry);
+      final difference = now.difference(entryDateTime.toLocal());
+      if (difference.isNegative || difference.inSeconds < 10) return 'Just now';
 
       final hours = difference.inHours;
       final minutes = difference.inMinutes % 60;
+      final seconds = difference.inSeconds % 60;
 
       if (hours > 0) {
         return '${hours}h ${minutes}m';
       }
-      return '${minutes}m';
+      if (minutes > 0) {
+        return '${minutes}m ${seconds}s';
+      }
+      return '${seconds}s';
     } catch (e) {
-      return 'Unknown';
+      return '0m';
     }
   }
 
-  String _formatTime(String timestamp) {
+  String _formatTime(DateTime? dateTime) {
+    if (dateTime == null) return '--:--';
     try {
-      final dateTime = DateTime.parse(timestamp);
-      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      final local = dateTime.toLocal();
+      final hour = local.hour;
+      final minute = local.minute.toString().padLeft(2, '0');
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+      return '${displayHour.toString().padLeft(2, '0')}:$minute $period';
     } catch (e) {
-      return 'Unknown';
+      return '--:--';
     }
   }
 

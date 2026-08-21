@@ -326,7 +326,7 @@ class LibraryProvider with ChangeNotifier {
       await supabase.from('scan_logs').insert({
         'student_id': studentId,
         'scan_type': 'EXIT',
-        'timestamp': DateTime.now().toIso8601String(),
+        'timestamp': DateTime.now().toUtc().toIso8601String(),
       });
 
       final configResponse =
@@ -336,7 +336,7 @@ class LibraryProvider with ChangeNotifier {
         occupiedSeats = (occupiedSeats - 1).clamp(0, 9999);
         await supabase.from('library_config').update({
           'occupied_seats': occupiedSeats,
-          'last_updated': DateTime.now().toIso8601String(),
+          'last_updated': DateTime.now().toUtc().toIso8601String(),
         }).eq('id', configResponse['id']);
       }
 
