@@ -290,8 +290,6 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
     );
   }
 
-
-
   void _showResetDialog(LibraryProvider provider) {
     showDialog(
       context: context,

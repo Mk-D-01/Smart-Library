@@ -21,37 +21,66 @@ class SeatMapWidget extends StatefulWidget {
 class _SeatMapWidgetState extends State<SeatMapWidget> {
   int _selectedZone = 1;
 
-  final List<Map<String, dynamic>> _zones = const [
-    {'zone': 1, 'label': 'Zone 1', 'range': '1–100', 'desc': 'Ground Floor • North'},
-    {'zone': 2, 'label': 'Zone 2', 'range': '101–200', 'desc': 'Floor 1 • East Wing'},
-    {'zone': 3, 'label': 'Zone 3', 'range': '201–300', 'desc': 'Floor 2 • West Wing'},
-    {'zone': 4, 'label': 'Zone 4', 'range': '301–400', 'desc': 'Floor 3 • Silent Study'},
-  ];
+  List<Map<String, dynamic>> _getZones(int totalSeats) {
+    final effectiveTotal = totalSeats > 0 ? totalSeats : 100;
+    final numZones = (effectiveTotal / 100).ceil();
+
+    const descriptions = [
+      'Ground Floor • North',
+      'Floor 1 • East Wing',
+      'Floor 2 • West Wing',
+      'Floor 3 • Silent Study',
+    ];
+
+    final List<Map<String, dynamic>> zones = [];
+    for (int z = 1; z <= numZones; z++) {
+      final start = (z - 1) * 100 + 1;
+      final end = (z * 100).clamp(1, effectiveTotal);
+      final desc = z <= descriptions.length
+          ? descriptions[z - 1]
+          : 'Floor ${z - 1} • Zone $z';
+
+      zones.add({
+        'zone': z,
+        'label': 'Zone $z',
+        'range': '$start–$end',
+        'desc': desc,
+      });
+    }
+    return zones;
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final totalSeats =
+        widget.seatMap.totalSeats > 0 ? widget.seatMap.totalSeats : 100;
+    final zones = _getZones(totalSeats);
+    if (_selectedZone > zones.length && zones.isNotEmpty) {
+      _selectedZone = zones.length;
+    }
 
     return Column(
       children: [
         // Multi-Zone Selector Bar
-        _buildZoneSelector(isDark),
+        _buildZoneSelector(isDark, totalSeats, zones),
         const SizedBox(height: 12),
         // Legend
         _buildLegend(isDark),
         const SizedBox(height: 12),
         // Stats
-        _buildStats(isDark),
+        _buildStats(isDark, totalSeats),
         const SizedBox(height: 12),
         // Seat Grid
         Expanded(
-          child: _buildSeatGrid(isDark),
+          child: _buildSeatGrid(isDark, totalSeats),
         ),
       ],
     );
   }
 
-  Widget _buildZoneSelector(bool isDark) {
+  Widget _buildZoneSelector(
+      bool isDark, int totalSeats, List<Map<String, dynamic>> zones) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -84,7 +113,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Library Zones (400 Seats)',
+                    'Library Zones ($totalSeats Seats)',
                     style: TextStyle(
                       color: isDark ? Colors.white : AppTheme.textPrimary,
                       fontSize: 13,
@@ -116,7 +145,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
           const SizedBox(height: 8),
           Row(
             children: [
-              for (final zoneData in _zones)
+              for (final zoneData in zones)
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
@@ -243,13 +272,17 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
     );
   }
 
-  Widget _buildStats(bool isDark) {
+  Widget _buildStats(bool isDark, int totalSeats) {
+    final occupied = widget.seatMap.occupiedSeats;
+    final available = (totalSeats - occupied).clamp(0, totalSeats);
+    final rate = totalSeats > 0 ? ((occupied / totalSeats) * 100).round() : 0;
+
     return Row(
       children: [
         Expanded(
           child: _statCard(
             'Total',
-            '400',
+            '$totalSeats',
             isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.4) : Colors.blue.shade50,
             isDark ? const Color(0xFF93C5FD) : Colors.blue.shade700,
             isDark,
@@ -259,7 +292,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
         Expanded(
           child: _statCard(
             'Occupied',
-            widget.seatMap.occupiedSeats.toString(),
+            '$occupied',
             isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.4) : Colors.red.shade50,
             isDark ? const Color(0xFFFCA5A5) : Colors.red.shade700,
             isDark,
@@ -269,7 +302,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
         Expanded(
           child: _statCard(
             'Available',
-            widget.seatMap.availableSeats.toString(),
+            '$available',
             isDark ? const Color(0xFF064E3B).withValues(alpha: 0.4) : Colors.green.shade50,
             isDark ? const Color(0xFF6EE7B7) : Colors.green.shade700,
             isDark,
@@ -279,7 +312,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
         Expanded(
           child: _statCard(
             'Rate',
-            '${widget.seatMap.occupancyRate}%',
+            '$rate%',
             isDark ? const Color(0xFF78350F).withValues(alpha: 0.4) : Colors.orange.shade50,
             isDark ? const Color(0xFFFCD34D) : Colors.orange.shade700,
             isDark,
@@ -324,9 +357,9 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
     );
   }
 
-  Widget _buildSeatGrid(bool isDark) {
+  Widget _buildSeatGrid(bool isDark, int totalSeats) {
     final zoneOffset = (_selectedZone - 1) * 100;
-    const totalCapacity = 400;
+    final totalCapacity = totalSeats;
 
     return Container(
       decoration: BoxDecoration(

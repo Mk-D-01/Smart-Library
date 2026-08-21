@@ -5,7 +5,7 @@
 
 class SupabaseConfig {
   // Supabase Project URL
-  static const String url = 'https://durphnxkjxboefxkkfty.supabase.co';
+  static const String url = 'https://durphxnkjxboefxkkfty.supabase.co';
   
   // Supabase Anon Key (safe for client-side use)
   // Note: Using service key here - in production, use the anon key for client apps
