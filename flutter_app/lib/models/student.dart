@@ -43,7 +43,7 @@ class Student {
     final now = DateTime.now();
     // If the timestamp is in the future by > 1 minute, compensate for local clock stored in UTC column
     if (dt.isAfter(now.add(const Duration(minutes: 1)))) {
-      dt = dt.subtract(now.timeZoneOffset);
+      dt = dt.subtract(dt.timeZoneOffset);
     }
     return dt;
   }
