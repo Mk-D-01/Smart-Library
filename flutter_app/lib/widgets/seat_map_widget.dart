@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/seat_map.dart';
 import '../models/seat.dart';
+import '../models/student.dart';
 import '../config/theme_config.dart';
 
 class SeatMapWidget extends StatefulWidget {
@@ -432,12 +433,18 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                             );
                           }
 
-                          final isOccupied = deskNumber <= widget.seatMap.occupiedSeats;
-                          final seat = Seat(
+                          final globalRow = (deskNumber - 1) ~/ 10;
+                          final globalCol = (deskNumber - 1) % 10;
+                          Seat? seat;
+                          if (globalRow < widget.seatMap.seats.length &&
+                              globalCol < widget.seatMap.seats[globalRow].length) {
+                            seat = widget.seatMap.seats[globalRow][globalCol];
+                          }
+                          seat ??= Seat(
                             id: deskNumber,
                             row: rowIndex + 1,
                             col: colIndex + 1,
-                            status: isOccupied ? 'OCCUPIED' : 'AVAILABLE',
+                            status: deskNumber <= widget.seatMap.occupiedSeats ? 'OCCUPIED' : 'AVAILABLE',
                           );
 
                           return Expanded(
@@ -536,15 +543,13 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
   void _showSeatDetailsModal(Seat seat, int deskNumber, bool isDark) {
     final isOccupied = seat.isOccupied;
     final rowLetter = String.fromCharCode(64 + seat.row);
-    final demoStudentName = 'Student $deskNumber';
-    final demoStudentId = 'STU${deskNumber.toString().padLeft(3, '0')}';
-    final studentName = seat.student?.name ?? (isOccupied ? demoStudentName : null);
-    final studentId = seat.student?.id ?? (isOccupied ? demoStudentId : null);
+    final studentName = seat.student?.name ?? (isOccupied ? 'Student $deskNumber' : null);
+    final studentId = seat.student?.id ?? (isOccupied ? 'STU${deskNumber.toString().padLeft(3, '0')}' : null);
     final studentCourse = seat.student?.course;
 
-    // Parse real entry time from backend, or compute a fallback
+    // Parse real entry time from backend
     final rawEntryTime = seat.student?.entryTime;
-    final entryDateTime = rawEntryTime != null ? DateTime.tryParse(rawEntryTime) : null;
+    final entryDateTime = Student.parseDateTime(rawEntryTime);
 
     showModalBottomSheet(
       context: context,
@@ -712,8 +717,9 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                               ),
                               Text(
                                 () {
-                                  final hour = entryDateTime.hour;
-                                  final minute = entryDateTime.minute.toString().padLeft(2, '0');
+                                  final dt = entryDateTime;
+                                  final hour = dt.hour;
+                                  final minute = dt.minute.toString().padLeft(2, '0');
                                   final period = hour >= 12 ? 'PM' : 'AM';
                                   final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
                                   return '${displayHour.toString().padLeft(2, '0')}:$minute $period';
@@ -742,18 +748,15 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                               () {
                                 if (entryDateTime != null) {
                                   final diff = DateTime.now().difference(entryDateTime);
-                                  if (diff.isNegative) return '0m';
+                                  if (diff.isNegative || diff.inSeconds < 10) return 'Just now';
                                   final hours = diff.inHours;
                                   final mins = diff.inMinutes % 60;
+                                  final secs = diff.inSeconds % 60;
                                   if (hours > 0) return '${hours}h ${mins}m';
-                                  if (mins > 0) return '${mins}m';
-                                  return '${diff.inSeconds}s';
+                                  if (mins > 0) return '${mins}m ${secs}s';
+                                  return '${secs}s';
                                 }
-                                // Fallback for demo
-                                final elapsedMins = ((deskNumber * 13 + 7) % 160 + 2);
-                                final hours = elapsedMins ~/ 60;
-                                final mins = elapsedMins % 60;
-                                return hours > 0 ? '${hours}h ${mins}m' : '${mins}m';
+                                return isOccupied ? 'Active' : '--';
                               }(),
                               style: TextStyle(
                                 fontSize: 12,

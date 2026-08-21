@@ -196,7 +196,7 @@ class _StudentHistoryScreenState extends State<StudentHistoryScreen> {
 
   String _formatDateTime(String timestamp) {
     try {
-      final dateTime = DateTime.parse(timestamp).toLocal();
+      final dateTime = ScanLog.parseTimestamp(timestamp);
       final now = DateTime.now();
 
       final hour = dateTime.hour;

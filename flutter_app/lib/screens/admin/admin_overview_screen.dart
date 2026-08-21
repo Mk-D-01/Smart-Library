@@ -368,7 +368,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                           ),
                           title: Text('Student ${log.studentId}',
                               style: const TextStyle(fontSize: 14)),
-                          subtitle: Text(log.relativeTime,
+                          subtitle: Text('${log.relativeTime} • ${log.formattedTime}',
                               style: const TextStyle(fontSize: 12)),
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(

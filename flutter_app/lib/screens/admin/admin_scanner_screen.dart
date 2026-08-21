@@ -396,8 +396,9 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
     });
   }
 
-  void _processScan(String studentId) {
-    if (studentId.isEmpty) {
+  Future<void> _processScan(String studentId) async {
+    final trimmedId = studentId.trim();
+    if (trimmedId.isEmpty) {
       _showError('Please enter a valid student ID');
       return;
     }
@@ -406,17 +407,24 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
       _isScanning = true;
     });
 
-    // TODO: Implement actual scan processing
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isScanning = false;
-      });
+    try {
+      final provider = Provider.of<LibraryProvider>(context, listen: false);
+      final result = await provider.processScan(trimmedId);
 
-      _showSuccess('Scan processed successfully');
+      final isEntry = result.action == 'ENTRY';
+      _showSuccess('Student $trimmedId: ${isEntry ? "ENTRY" : "EXIT"} recorded');
       if (_showManualInput) {
         _manualController.clear();
       }
-    });
+    } catch (e) {
+      _showError('Scan failed: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isScanning = false;
+        });
+      }
+    }
   }
 
   void _showSuccess(String message) {
@@ -453,14 +461,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
 
   String _formatTime(dynamic timestamp) {
     try {
-      DateTime dateTime;
-      if (timestamp is DateTime) {
-        dateTime = timestamp.toLocal();
-      } else if (timestamp is String) {
-        dateTime = DateTime.parse(timestamp).toLocal();
-      } else {
-        return 'Unknown';
-      }
+      final dateTime = ScanLog.parseTimestamp(timestamp);
       final hour = dateTime.hour;
       final minute = dateTime.minute.toString().padLeft(2, '0');
       final period = hour >= 12 ? 'PM' : 'AM';

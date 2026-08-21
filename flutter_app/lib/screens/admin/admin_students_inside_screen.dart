@@ -396,15 +396,19 @@ class _AdminStudentsInsideScreenState extends State<AdminStudentsInsideScreen>
     try {
       final now = DateTime.now();
       final difference = now.difference(entryDateTime.toLocal());
-      if (difference.isNegative) return '0m';
+      if (difference.isNegative || difference.inSeconds < 10) return 'Just now';
 
       final hours = difference.inHours;
       final minutes = difference.inMinutes % 60;
+      final seconds = difference.inSeconds % 60;
 
       if (hours > 0) {
         return '${hours}h ${minutes}m';
       }
-      return '${minutes}m';
+      if (minutes > 0) {
+        return '${minutes}m ${seconds}s';
+      }
+      return '${seconds}s';
     } catch (e) {
       return '0m';
     }
