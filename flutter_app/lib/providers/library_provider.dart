@@ -41,7 +41,7 @@ class LibraryProvider with ChangeNotifier {
 
   // Sync library status from ground truth (_studentsInside)
   void _syncLibraryStatus() {
-    final totalSeats = _libraryStatus?.totalSeats ?? 100;
+    final totalSeats = _libraryStatus?.totalSeats ?? 400;
     final occupiedSeats = _studentsInside.length;
     final availableSeats = totalSeats - occupiedSeats;
     final occupancyPercentage =
@@ -71,6 +71,7 @@ class LibraryProvider with ChangeNotifier {
       _statusChannel = _supabase.subscribeToLibraryStatus((payload) {
         debugPrint('Library status changed: $payload');
         fetchLibraryStatus();
+        fetchSeatMap();
       });
 
       _logsChannel = _supabase.subscribeToScanLogs((payload) {
@@ -94,6 +95,7 @@ class LibraryProvider with ChangeNotifier {
         fetchLibraryStatus(),
         fetchStudentsInside(),
         fetchScanLogs(),
+        fetchSeatMap(),
         if (studentId != null) fetchStudentScanLogs(studentId),
       ]);
       _isSystemOnline = true;
@@ -184,17 +186,24 @@ class LibraryProvider with ChangeNotifier {
           student: student,
           libraryStatus: _libraryStatus ??
               LibraryStatus(
-                totalSeats: 100,
+                totalSeats: 400,
                 occupiedSeats: 0,
-                availableSeats: 100,
+                availableSeats: 400,
                 occupancyPercentage: 0,
               ),
         );
       } else {
-        throw Exception(result['error'] ?? 'Scan failed');
+        final errorMsg = result['error']?.toString() ?? 'Scan failed';
+        if (errorMsg.contains('42501') || errorMsg.contains('row-level security')) {
+          throw Exception('Unable to register new student. Database security policy (RLS) restricts student creation.');
+        }
+        throw Exception(errorMsg);
       }
     } catch (e) {
       debugPrint('Scan error: $e');
+      if (e.toString().contains('42501') || e.toString().contains('row-level security')) {
+        throw Exception('Unable to register new student. Database security policy (RLS) restricts student creation.');
+      }
       throw Exception('Scan failed: $e');
     }
   }
@@ -221,6 +230,7 @@ class LibraryProvider with ChangeNotifier {
         throw Exception('Update failed');
       }
       await fetchLibraryStatus();
+      await fetchSeatMap();
     } catch (e) {
       debugPrint('Update capacity error: $e');
       throw Exception('Update failed: $e');
@@ -316,7 +326,7 @@ class LibraryProvider with ChangeNotifier {
       await supabase.from('scan_logs').insert({
         'student_id': studentId,
         'scan_type': 'EXIT',
-        'timestamp': DateTime.now().toIso8601String(),
+        'timestamp': DateTime.now().toUtc().toIso8601String(),
       });
 
       final configResponse =
@@ -326,7 +336,7 @@ class LibraryProvider with ChangeNotifier {
         occupiedSeats = (occupiedSeats - 1).clamp(0, 9999);
         await supabase.from('library_config').update({
           'occupied_seats': occupiedSeats,
-          'last_updated': DateTime.now().toIso8601String(),
+          'last_updated': DateTime.now().toUtc().toIso8601String(),
         }).eq('id', configResponse['id']);
       }
 
@@ -377,11 +387,12 @@ class LibraryProvider with ChangeNotifier {
       );
       if (success) {
         await fetchLibraryStatus();
+        await fetchSeatMap();
       }
       return success;
     } catch (e) {
       debugPrint('Update settings error: $e');
-      return false;
+      rethrow;
     }
   }
 

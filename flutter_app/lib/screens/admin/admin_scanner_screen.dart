@@ -3,6 +3,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
 import '../../providers/library_provider.dart';
 import '../../config/theme_config.dart';
+import '../../models/scan_log.dart';
 
 class AdminScannerScreen extends StatefulWidget {
   const AdminScannerScreen({super.key});
@@ -332,7 +333,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
     );
   }
 
-  Widget _buildRecentScanItem(log) {
+  Widget _buildRecentScanItem(ScanLog log) {
     final isEntry = log.scanType == 'ENTRY';
     final color = isEntry ? AppTheme.accentGreen : AppTheme.accentAmber;
     final icon = isEntry ? Icons.login : Icons.logout;
@@ -342,7 +343,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: const BorderRadius.all(Radius.circular(8)),
       ),
       child: Row(
         children: [
@@ -353,7 +354,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  log.studentId ?? 'Unknown',
+                  log.studentId,
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     color: AppTheme.textPrimary,
@@ -373,7 +374,7 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
             ),
             child: Text(
               isEntry ? 'IN' : 'OUT',
@@ -395,8 +396,9 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
     });
   }
 
-  void _processScan(String studentId) {
-    if (studentId.isEmpty) {
+  Future<void> _processScan(String studentId) async {
+    final trimmedId = studentId.trim();
+    if (trimmedId.isEmpty) {
       _showError('Please enter a valid student ID');
       return;
     }
@@ -405,17 +407,25 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
       _isScanning = true;
     });
 
-    // TODO: Implement actual scan processing
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isScanning = false;
-      });
+    try {
+      final provider = Provider.of<LibraryProvider>(context, listen: false);
+      final result = await provider.processScan(trimmedId);
 
-      _showSuccess('Scan processed successfully');
+      final isEntry = result.action == 'ENTRY';
+      _showSuccess('Student $trimmedId: ${isEntry ? "ENTRY" : "EXIT"} recorded');
       if (_showManualInput) {
         _manualController.clear();
       }
-    });
+    } catch (e) {
+      debugPrint('Scan failed: $e');
+      _showError('Scan failed. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isScanning = false;
+        });
+      }
+    }
   }
 
   void _showSuccess(String message) {
@@ -452,15 +462,12 @@ class _AdminScannerScreenState extends State<AdminScannerScreen> {
 
   String _formatTime(dynamic timestamp) {
     try {
-      DateTime dateTime;
-      if (timestamp is DateTime) {
-        dateTime = timestamp;
-      } else if (timestamp is String) {
-        dateTime = DateTime.parse(timestamp);
-      } else {
-        return 'Unknown';
-      }
-      return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      final dateTime = ScanLog.parseTimestamp(timestamp);
+      final hour = dateTime.hour;
+      final minute = dateTime.minute.toString().padLeft(2, '0');
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+      return '${displayHour.toString().padLeft(2, '0')}:$minute $period';
     } catch (e) {
       return 'Unknown';
     }

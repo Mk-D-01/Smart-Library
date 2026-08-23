@@ -43,8 +43,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
             // Manual Entry Card
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(16))),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -78,8 +78,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
                         labelText: 'Student ID',
                         hintText: 'Enter 11-digit Student ID',
                         prefixIcon: const Icon(Icons.badge),
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                        border: const OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(12))),
                         filled: true,
                         fillColor: AppTheme.background,
                       ),
@@ -121,8 +121,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
             if (_lastScanResult != null)
               Card(
                 elevation: 2,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(16))),
                 color: _wasEntry == true
                     ? AppTheme.accentGreen.withValues(alpha: 0.1)
                     : AppTheme.accentRed.withValues(alpha: 0.1),
@@ -169,8 +169,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
 
                 return Card(
                   elevation: 1,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(16))),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -208,8 +208,8 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
             // Instructions
             Card(
               elevation: 1,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+              shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(16))),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -386,7 +386,9 @@ class _AdminManualScannerScreenState extends State<AdminManualScannerScreen> {
         );
       }
     } finally {
-      setState(() => _isScanning = false);
+      if (mounted) {
+        setState(() => _isScanning = false);
+      }
     }
   }
 }

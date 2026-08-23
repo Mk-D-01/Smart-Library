@@ -5,11 +5,11 @@
 
 class SupabaseConfig {
   // Supabase Project URL
-  static const String url = 'https://yvzafbeubvwrsdmefuzo.supabase.co';
+  static const String url = 'https://durphxnkjxboefxkkfty.supabase.co';
   
   // Supabase Anon Key (safe for client-side use)
   // Note: Using service key here - in production, use the anon key for client apps
-  static const String anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2emFmYmV1YnZ3cnNkbWVmdXpvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDA4Mjk5MSwiZXhwIjoyMDg5NjU4OTkxfQ.ejNEnxnsqaumiDLRJeKsYGNEQBgWwVqfUwesZ0hsef0';
+  static const String anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR1cnBoeG5ranhib2VmeGtrZnR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyMzg3NzksImV4cCI6MjEwMjgxNDc3OX0.xhIPkq7A99-jA3bbBWDCiGVwUelMx-72jbx0Z4tbIL0';
   
   // Database table names
   static const String studentsTable = 'students';

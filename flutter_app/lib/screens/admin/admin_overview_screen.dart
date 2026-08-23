@@ -156,7 +156,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                     Expanded(
                       child: _buildStatCard(
                         'Available',
-                        '${(status?.totalSeats ?? 100) - studentsInside.length}',
+                        '${(status?.totalSeats ?? 400) - studentsInside.length}',
                         Icons.check_circle,
                         AppTheme.accentGreen,
                       ),
@@ -165,9 +165,9 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                     Expanded(
                       child: _buildStatCard(
                         'Occupancy',
-                        '${((studentsInside.length / (status?.totalSeats ?? 100)) * 100).toStringAsFixed(1)}%',
+                        '${((studentsInside.length / (status?.totalSeats ?? 400)) * 100).toStringAsFixed(1)}%',
                         Icons.pie_chart,
-                        ((studentsInside.length / (status?.totalSeats ?? 100)) *
+                        ((studentsInside.length / (status?.totalSeats ?? 400)) *
                                     100) >=
                                 80
                             ? AppTheme.accentRed
@@ -229,7 +229,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'See pictograph of all ${status?.totalSeats ?? 100} seats',
+                                'See pictograph of all ${status?.totalSeats ?? 400} seats',
                                 style: TextStyle(
                                   color: Colors.white.withValues(alpha: 0.8),
                                   fontSize: 13,
@@ -368,7 +368,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
                           ),
                           title: Text('Student ${log.studentId}',
                               style: const TextStyle(fontSize: 14)),
-                          subtitle: Text(log.relativeTime,
+                          subtitle: Text('${log.relativeTime} • ${log.formattedTime}',
                               style: const TextStyle(fontSize: 12)),
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(
@@ -405,7 +405,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -421,7 +421,7 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
             ),
             child: Icon(icon, color: color, size: 20),
           ),
@@ -449,18 +449,18 @@ class _AdminOverviewScreenState extends State<AdminOverviewScreen> {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Provider.of<AuthProvider>(context, listen: false).logout();
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await Provider.of<AuthProvider>(context, listen: false).logout();
             },
             child: const Text('Logout'),
           ),

@@ -145,7 +145,7 @@ class ApiService {
     // Demo data methods (for development when backend is not available)
     getDemoLibraryStatus() {
         const insideCount = this.demoStudentsCache ? this.demoStudentsCache.length : 5;
-        const total = CONFIG.TOTAL_SEATS || 350;
+        const total = CONFIG.TOTAL_SEATS || 400;
         const available = Math.max(0, total - insideCount);
         const percentage = Math.round((insideCount / total) * 100);
 
@@ -220,7 +220,7 @@ class ApiService {
         });
 
         const occupied = this.demoStudentsCache.length;
-        const total = CONFIG.TOTAL_SEATS || 350;
+        const total = CONFIG.TOTAL_SEATS || 400;
 
         return {
             success: true,
@@ -266,7 +266,7 @@ class ApiService {
     }
 
     getDemoSeatMap(students = []) {
-        const totalSeats = CONFIG.TOTAL_SEATS || 350;
+        const totalSeats = CONFIG.TOTAL_SEATS || 400;
         const cols = CONFIG.SEAT_GRID_COLS || 10;
         const rows = CONFIG.SEAT_GRID_ROWS || 10;
         const seats = [];

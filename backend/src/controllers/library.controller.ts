@@ -216,7 +216,7 @@ export const getSeatMap = async (_req: Request, res: Response) => {
   try {
     // Get library config for total seats
     const status = await getLibraryStatus();
-    const totalSeats = status?.totalSeats || 350;
+    const totalSeats = status?.totalSeats || 400;
     
     // Get students with REAL entry times from scan_logs
     const students = await getStudentsInsideWithEntryTime();

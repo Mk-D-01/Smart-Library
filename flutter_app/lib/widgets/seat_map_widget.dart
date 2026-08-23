@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/seat_map.dart';
 import '../models/seat.dart';
+import '../models/student.dart';
 import '../config/theme_config.dart';
 
 class SeatMapWidget extends StatefulWidget {
@@ -21,42 +22,71 @@ class SeatMapWidget extends StatefulWidget {
 class _SeatMapWidgetState extends State<SeatMapWidget> {
   int _selectedZone = 1;
 
-  final List<Map<String, dynamic>> _zones = [
-    {'zone': 1, 'label': 'Zone 1', 'range': '1–100', 'desc': 'Ground Floor • North'},
-    {'zone': 2, 'label': 'Zone 2', 'range': '101–200', 'desc': 'Floor 1 • East Wing'},
-    {'zone': 3, 'label': 'Zone 3', 'range': '201–300', 'desc': 'Floor 2 • West Wing'},
-    {'zone': 4, 'label': 'Zone 4', 'range': '301–350', 'desc': 'Floor 3 • Silent Study'},
-  ];
+  List<Map<String, dynamic>> _getZones(int totalSeats) {
+    final effectiveTotal = totalSeats > 0 ? totalSeats : 100;
+    final numZones = (effectiveTotal / 100).ceil();
+
+    const descriptions = [
+      'Ground Floor • North',
+      'Floor 1 • East Wing',
+      'Floor 2 • West Wing',
+      'Floor 3 • Silent Study',
+    ];
+
+    final List<Map<String, dynamic>> zones = [];
+    for (int z = 1; z <= numZones; z++) {
+      final start = (z - 1) * 100 + 1;
+      final end = (z * 100).clamp(1, effectiveTotal);
+      final desc = z <= descriptions.length
+          ? descriptions[z - 1]
+          : 'Floor ${z - 1} • Zone $z';
+
+      zones.add({
+        'zone': z,
+        'label': 'Zone $z',
+        'range': '$start–$end',
+        'desc': desc,
+      });
+    }
+    return zones;
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final totalSeats =
+        widget.seatMap.totalSeats > 0 ? widget.seatMap.totalSeats : 100;
+    final zones = _getZones(totalSeats);
+    if (_selectedZone > zones.length && zones.isNotEmpty) {
+      _selectedZone = zones.length;
+    }
 
     return Column(
       children: [
         // Multi-Zone Selector Bar
-        _buildZoneSelector(isDark),
+        _buildZoneSelector(isDark, totalSeats, zones),
         const SizedBox(height: 12),
         // Legend
         _buildLegend(isDark),
         const SizedBox(height: 12),
         // Stats
-        _buildStats(isDark),
+        _buildStats(isDark, totalSeats),
         const SizedBox(height: 12),
         // Seat Grid
         Expanded(
-          child: _buildSeatGrid(isDark),
+          child: _buildSeatGrid(isDark, totalSeats),
         ),
       ],
     );
   }
 
-  Widget _buildZoneSelector(bool isDark) {
+  Widget _buildZoneSelector(
+      bool isDark, int totalSeats, List<Map<String, dynamic>> zones) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
           width: 1,
@@ -84,7 +114,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Library Zones (350 Seats)',
+                    'Library Zones ($totalSeats Seats)',
                     style: TextStyle(
                       color: isDark ? Colors.white : AppTheme.textPrimary,
                       fontSize: 13,
@@ -99,7 +129,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                   decoration: BoxDecoration(
                     color: (isDark ? const Color(0xFF818CF8) : AppTheme.primaryBlue)
                         .withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: const BorderRadius.all(Radius.circular(8)),
                   ),
                   child: Text(
                     'Zone $_selectedZone',
@@ -115,73 +145,73 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
           ),
           const SizedBox(height: 8),
           Row(
-            children: _zones.map((zoneData) {
-              final zone = zoneData['zone'] as int;
-              final isSelected = _selectedZone == zone;
-
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() {
-                      _selectedZone = zone;
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeInOut,
-                    margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppTheme.primaryBlue
-                          : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: isSelected
+            children: [
+              for (final zoneData in zones)
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        _selectedZone = zoneData['zone'] as int;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeInOut,
+                      margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: _selectedZone == (zoneData['zone'] as int)
                             ? AppTheme.primaryBlue
-                            : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
-                        width: 1.5,
+                            : (isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9)),
+                        borderRadius: const BorderRadius.all(Radius.circular(10)),
+                        border: Border.all(
+                          color: _selectedZone == (zoneData['zone'] as int)
+                              ? AppTheme.primaryBlue
+                              : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                          width: 1.5,
+                        ),
+                        boxShadow: _selectedZone == (zoneData['zone'] as int)
+                            ? [
+                                BoxShadow(
+                                  color: AppTheme.primaryBlue.withValues(alpha: 0.35),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : null,
                       ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: AppTheme.primaryBlue.withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Column(
-                      children: [
-                        Text(
-                          zoneData['label'] as String,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : (isDark ? Colors.white70 : AppTheme.textPrimary),
-                            fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                      child: Column(
+                        children: [
+                          Text(
+                            zoneData['label'] as String,
+                            style: TextStyle(
+                              color: _selectedZone == (zoneData['zone'] as int)
+                                  ? Colors.white
+                                  : (isDark ? Colors.white70 : AppTheme.textPrimary),
+                              fontSize: 11,
+                              fontWeight: _selectedZone == (zoneData['zone'] as int)
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          zoneData['range'] as String,
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.white.withValues(alpha: 0.85)
-                                : (isDark ? Colors.grey.shade400 : AppTheme.textSecondary),
-                            fontSize: 9,
-                            fontWeight: FontWeight.w400,
+                          const SizedBox(height: 2),
+                          Text(
+                            zoneData['range'] as String,
+                            style: TextStyle(
+                              color: _selectedZone == (zoneData['zone'] as int)
+                                  ? Colors.white.withValues(alpha: 0.85)
+                                  : (isDark ? Colors.grey.shade400 : AppTheme.textSecondary),
+                              fontSize: 9,
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              );
-            }).toList(),
+            ],
           ),
         ],
       ),
@@ -193,7 +223,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
           width: 1,
@@ -227,7 +257,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
           height: 14,
           decoration: BoxDecoration(
             color: color,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
           ),
         ),
         const SizedBox(width: 6),
@@ -243,13 +273,17 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
     );
   }
 
-  Widget _buildStats(bool isDark) {
+  Widget _buildStats(bool isDark, int totalSeats) {
+    final occupied = widget.seatMap.occupiedSeats;
+    final available = (totalSeats - occupied).clamp(0, totalSeats);
+    final rate = totalSeats > 0 ? ((occupied / totalSeats) * 100).round() : 0;
+
     return Row(
       children: [
         Expanded(
           child: _statCard(
             'Total',
-            '350',
+            '$totalSeats',
             isDark ? const Color(0xFF1E3A8A).withValues(alpha: 0.4) : Colors.blue.shade50,
             isDark ? const Color(0xFF93C5FD) : Colors.blue.shade700,
             isDark,
@@ -259,7 +293,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
         Expanded(
           child: _statCard(
             'Occupied',
-            widget.seatMap.occupiedSeats.toString(),
+            '$occupied',
             isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.4) : Colors.red.shade50,
             isDark ? const Color(0xFFFCA5A5) : Colors.red.shade700,
             isDark,
@@ -269,7 +303,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
         Expanded(
           child: _statCard(
             'Available',
-            widget.seatMap.availableSeats.toString(),
+            '$available',
             isDark ? const Color(0xFF064E3B).withValues(alpha: 0.4) : Colors.green.shade50,
             isDark ? const Color(0xFF6EE7B7) : Colors.green.shade700,
             isDark,
@@ -279,7 +313,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
         Expanded(
           child: _statCard(
             'Rate',
-            '${widget.seatMap.occupancyRate}%',
+            '$rate%',
             isDark ? const Color(0xFF78350F).withValues(alpha: 0.4) : Colors.orange.shade50,
             isDark ? const Color(0xFFFCD34D) : Colors.orange.shade700,
             isDark,
@@ -294,7 +328,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: const BorderRadius.all(Radius.circular(12)),
         border: Border.all(
           color: textColor.withValues(alpha: 0.25),
           width: 1,
@@ -324,14 +358,14 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
     );
   }
 
-  Widget _buildSeatGrid(bool isDark) {
+  Widget _buildSeatGrid(bool isDark, int totalSeats) {
     final zoneOffset = (_selectedZone - 1) * 100;
-    const totalCapacity = 350;
+    final totalCapacity = totalSeats;
 
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: const BorderRadius.all(Radius.circular(16)),
         border: Border.all(
           color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
           width: 1,
@@ -374,42 +408,50 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                         ),
                       ),
                       // 10 Seat Cells
-                      ...List.generate(10, (colIndex) {
-                        final deskNumber = zoneOffset + (rowIndex * 10) + colIndex + 1;
-                        if (deskNumber > totalCapacity) {
-                          // Buffer
-                          return Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(1.5),
-                              child: Container(
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade100,
-                                  borderRadius: BorderRadius.circular(5),
-                                  border: Border.all(
-                                    color: isDark ? const Color(0xFF334155) : Colors.grey.shade200,
+                      for (int colIndex = 0; colIndex < 10; colIndex++) ...[
+                        () {
+                          final deskNumber = zoneOffset + (rowIndex * 10) + colIndex + 1;
+                          if (deskNumber > totalCapacity) {
+                            // Buffer
+                            return Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(1.5),
+                                child: Container(
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: isDark ? const Color(0xFF0F172A) : Colors.grey.shade100,
+                                    borderRadius: const BorderRadius.all(Radius.circular(5)),
+                                    border: Border.all(
+                                      color: isDark ? const Color(0xFF334155) : Colors.grey.shade200,
+                                    ),
+                                  ),
+                                  child: const Center(
+                                    child: Text('--', style: TextStyle(fontSize: 8, color: Colors.grey)),
                                   ),
                                 ),
-                                child: const Center(
-                                  child: Text('--', style: TextStyle(fontSize: 8, color: Colors.grey)),
-                                ),
                               ),
-                            ),
+                            );
+                          }
+
+                          final globalRow = (deskNumber - 1) ~/ 10;
+                          final globalCol = (deskNumber - 1) % 10;
+                          Seat? seat;
+                          if (globalRow < widget.seatMap.seats.length &&
+                              globalCol < widget.seatMap.seats[globalRow].length) {
+                            seat = widget.seatMap.seats[globalRow][globalCol];
+                          }
+                          seat ??= Seat(
+                            id: deskNumber,
+                            row: rowIndex + 1,
+                            col: colIndex + 1,
+                            status: deskNumber <= widget.seatMap.occupiedSeats ? 'OCCUPIED' : 'AVAILABLE',
                           );
-                        }
 
-                        final isOccupied = deskNumber <= widget.seatMap.occupiedSeats;
-                        final seat = Seat(
-                          id: deskNumber,
-                          row: rowIndex + 1,
-                          col: colIndex + 1,
-                          status: isOccupied ? 'OCCUPIED' : 'AVAILABLE',
-                        );
-
-                        return Expanded(
-                          child: _buildSeatCell(seat, deskNumber, isDark),
-                        );
-                      }),
+                          return Expanded(
+                            child: _buildSeatCell(seat, deskNumber, isDark),
+                          );
+                        }(),
+                      ],
                     ],
                   ),
                 );
@@ -425,8 +467,8 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
     return Row(
       children: [
         const SizedBox(width: 28),
-        ...List.generate(10, (i) {
-          return Expanded(
+        for (int i = 0; i < 10; i++)
+          Expanded(
             child: Center(
               child: Text(
                 '${i + 1}',
@@ -437,8 +479,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                 ),
               ),
             ),
-          );
-        }),
+          ),
       ],
     );
   }
@@ -468,7 +509,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
             height: 32,
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: const BorderRadius.all(Radius.circular(6)),
               boxShadow: [
                 BoxShadow(
                   color: color.withValues(alpha: 0.35),
@@ -502,15 +543,13 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
   void _showSeatDetailsModal(Seat seat, int deskNumber, bool isDark) {
     final isOccupied = seat.isOccupied;
     final rowLetter = String.fromCharCode(64 + seat.row);
-    final demoStudentName = 'Student $deskNumber';
-    final demoStudentId = 'STU${deskNumber.toString().padLeft(3, '0')}';
-    final studentName = seat.student?.name ?? (isOccupied ? demoStudentName : null);
-    final studentId = seat.student?.id ?? (isOccupied ? demoStudentId : null);
+    final studentName = seat.student?.name ?? (isOccupied ? 'Student $deskNumber' : null);
+    final studentId = seat.student?.id ?? (isOccupied ? 'STU${deskNumber.toString().padLeft(3, '0')}' : null);
     final studentCourse = seat.student?.course;
-    
-    // Parse real entry time from backend, or compute a fallback
+
+    // Parse real entry time from backend
     final rawEntryTime = seat.student?.entryTime;
-    final entryDateTime = rawEntryTime != null ? DateTime.tryParse(rawEntryTime) : null;
+    final entryDateTime = Student.parseDateTime(rawEntryTime);
 
     showModalBottomSheet(
       context: context,
@@ -543,7 +582,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                     height: 4,
                     decoration: BoxDecoration(
                       color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: const BorderRadius.all(Radius.circular(2)),
                     ),
                   ),
                 ),
@@ -558,7 +597,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                         color: isOccupied
                             ? const Color(0xFFEF4444).withValues(alpha: 0.15)
                             : const Color(0xFF10B981).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: const BorderRadius.all(Radius.circular(14)),
                       ),
                       child: Icon(
                         isOccupied ? Icons.person_rounded : Icons.chair_rounded,
@@ -593,7 +632,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: isOccupied ? const Color(0xFFEF4444) : const Color(0xFF10B981),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: const BorderRadius.all(Radius.circular(20)),
                       ),
                       child: Text(
                         isOccupied ? 'OCCUPIED' : 'AVAILABLE',
@@ -614,7 +653,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: const BorderRadius.all(Radius.circular(16)),
                       border: Border.all(
                         color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                       ),
@@ -665,6 +704,36 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                         const SizedBox(height: 12),
                         const Divider(height: 1),
                         const SizedBox(height: 12),
+                        if (entryDateTime != null) ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Check-in Time',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.grey.shade400 : AppTheme.textSecondary,
+                                ),
+                              ),
+                              Text(
+                                () {
+                                  final dt = entryDateTime;
+                                  final hour = dt.hour;
+                                  final minute = dt.minute.toString().padLeft(2, '0');
+                                  final period = hour >= 12 ? 'PM' : 'AM';
+                                  final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+                                  return '${displayHour.toString().padLeft(2, '0')}:$minute $period';
+                                }(),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: isDark ? Colors.white : AppTheme.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -679,17 +748,15 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                               () {
                                 if (entryDateTime != null) {
                                   final diff = DateTime.now().difference(entryDateTime);
+                                  if (diff.isNegative || diff.inSeconds < 10) return 'Just now';
                                   final hours = diff.inHours;
                                   final mins = diff.inMinutes % 60;
+                                  final secs = diff.inSeconds % 60;
                                   if (hours > 0) return '${hours}h ${mins}m';
-                                  if (mins > 0) return '${mins}m';
-                                  return '${diff.inSeconds}s';
+                                  if (mins > 0) return '${mins}m ${secs}s';
+                                  return '${secs}s';
                                 }
-                                // Fallback for demo
-                                final elapsedMins = ((deskNumber * 13 + 7) % 160 + 2);
-                                final hours = elapsedMins ~/ 60;
-                                final mins = elapsedMins % 60;
-                                return hours > 0 ? '${hours}h ${mins}m' : '${mins}m';
+                                return isOccupied ? 'Active' : '--';
                               }(),
                               style: TextStyle(
                                 fontSize: 12,
@@ -708,7 +775,7 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: isDark ? const Color(0xFF064E3B).withValues(alpha: 0.2) : const Color(0xFFECFDF5),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: const BorderRadius.all(Radius.circular(16)),
                       border: Border.all(
                         color: const Color(0xFF10B981).withValues(alpha: 0.3),
                       ),
@@ -742,8 +809,8 @@ class _SeatMapWidgetState extends State<SeatMapWidget> {
                       backgroundColor: AppTheme.primaryBlue,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
                       ),
                     ),
                     child: const Text('Close', style: TextStyle(fontWeight: FontWeight.bold)),

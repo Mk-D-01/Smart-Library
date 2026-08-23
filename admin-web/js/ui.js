@@ -555,7 +555,7 @@ class UIManager {
         }
     }
 
-    // Set active zone for 350-seat library (Zone 1: 1-100, Zone 2: 101-200, Zone 3: 201-300, Zone 4: 301-350)
+    // Set active zone for 400-seat library (Zone 1: 1-100, Zone 2: 101-200, Zone 3: 201-300, Zone 4: 301-400)
     setSeatZone(zone) {
         this.activeSeatZone = Math.max(1, Math.min(4, zone));
 
@@ -564,7 +564,7 @@ class UIManager {
             1: 'Zone 1 (Desks 1–100)',
             2: 'Zone 2 (Desks 101–200)',
             3: 'Zone 3 (Desks 201–300)',
-            4: 'Zone 4 (Desks 301–350)'
+            4: 'Zone 4 (Desks 301–400)'
         };
         const activeLabel = document.getElementById('activeZoneLabel');
         if (activeLabel) {
@@ -587,11 +587,11 @@ class UIManager {
         }
     }
 
-    // Update dynamic 10x10 seat map visualization (Total 350 capacity across zones with in-place reconciliation)
+    // Update dynamic 10x10 seat map visualization (Total 400 capacity across zones with in-place reconciliation)
     updateSeatGrid(seatMapData) {
         if (!this.elements.seatGrid) return;
 
-        const totalCapacity = CONFIG.TOTAL_SEATS || 350;
+        const totalCapacity = CONFIG.TOTAL_SEATS || 400;
         let normalizedData = null;
 
         // Handle numeric input (legacy fallback) or complete seatMap object
