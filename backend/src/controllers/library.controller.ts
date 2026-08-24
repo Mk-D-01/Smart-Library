@@ -294,3 +294,4 @@ export const getSeatMap = async (_req: Request, res: Response, next: NextFunctio
     next(error);
   }
 };
+
