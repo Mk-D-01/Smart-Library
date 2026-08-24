@@ -1,30 +1,59 @@
 import { Request, Response, NextFunction } from 'express';
+import { AppError, NotFoundError } from '../utils/appError';
+import { sendError } from '../utils/responseHandler';
+import logger from '../utils/logger';
 
-export interface AppError extends Error {
-  statusCode?: number;
-  status?: string;
-}
+export { AppError };
 
+/**
+ * Global Centralized Error Handling Middleware
+ */
 export const errorHandler = (
-  err: AppError,
-  _req: Request,
+  err: Error | AppError,
+  req: Request,
   res: Response,
   _next: NextFunction
 ): void => {
-  const statusCode = err.statusCode || 500;
-  const status = err.status || 'error';
+  let statusCode = 500;
+  let message = 'Internal Server Error';
+  let errorCode = 'INTERNAL_SERVER_ERROR';
+  let details: any[] | undefined = undefined;
 
-  res.status(statusCode).json({
-    success: false,
-    status,
-    message: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
-  });
+  if (err instanceof AppError) {
+    statusCode = err.statusCode;
+    message = err.message;
+    errorCode = err.errorCode;
+    details = err.details;
+  } else if (err.name === 'SyntaxError' && 'body' in err) {
+    statusCode = 400;
+    message = 'Malformed JSON in request body';
+    errorCode = 'MALFORMED_JSON';
+  } else if (err.message) {
+    message = err.message;
+  }
+
+  // Log error using structured logger
+  if (statusCode >= 500) {
+    logger.error(`[${req.method} ${req.originalUrl}] Unhandled Exception: ${message}`, err, {
+      path: req.originalUrl,
+      method: req.method,
+      ip: req.ip,
+      body: req.body,
+    });
+  } else {
+    logger.warn(`[${req.method} ${req.originalUrl}] Operational Warning (${statusCode}): ${message}`, {
+      path: req.originalUrl,
+      errorCode,
+      details,
+    });
+  }
+
+  sendError(res, statusCode, message, errorCode, details);
 };
 
+/**
+ * 404 Route Not Found Middleware
+ */
 export const notFoundHandler = (req: Request, _res: Response, next: NextFunction): void => {
-  const error: AppError = new Error(`Route ${req.originalUrl} not found`);
-  error.statusCode = 404;
-  error.status = 'not_found';
-  next(error);
+  next(new NotFoundError(`Route ${req.method} ${req.originalUrl} not found`));
 };
