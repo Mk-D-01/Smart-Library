@@ -1,17 +1,81 @@
-# Library Management System - Backend API
+# Smart Library Management System - Backend API
 
-A complete Node.js + TypeScript backend for a library management system with Express.js and SQLite.
+A production-grade Node.js + TypeScript backend API for the Smart Library Management System powered by Express.js, Supabase PostgreSQL, `express-validator`, structured logging, and centralized error handling.
 
 ## Features
 
-- ✅ Express.js server with TypeScript
-- ✅ SQLite database (better-sqlite3)
-- ✅ RESTful API for Books and Members
-- ✅ CORS enabled for Flutter app
-- ✅ Input validation middleware
-- ✅ Error handling middleware
-- ✅ Environment variables support
-- ✅ Type-safe with TypeScript
+- ✅ **Express.js with TypeScript:** Type-safe controller, model, and routing layer.
+- ✅ **Supabase Database:** PostgreSQL cloud database integration for student records, scan logs, and occupancy state.
+- ✅ **Standardized API Envelope:** Uniform JSON response format across all success and error responses.
+- ✅ **Request Validation:** Declarative input validation powered by `express-validator`.
+- ✅ **Centralized Error Handling:** Custom operational `AppError` exception hierarchy with zero unhandled crash leaks.
+- ✅ **Structured Logging:** Level-based logging (`INFO`, `WARN`, `ERROR`, `DEBUG`) with ISO timestamps and Morgan stream integration.
+- ✅ **Access Expiry Enforcement:** Automatic validation of student degree duration and account active status during barcode/QR scans.
+
+---
+
+## Technical Stack & Dependencies
+
+- **Framework:** Express.js (`^4.18.2`)
+- **Language:** TypeScript (`^5.3.3`)
+- **Database SDK:** `@supabase/supabase-js` (`^2.39.3`)
+- **Validation:** `express-validator` (`^7.0.1`)
+- **Security & Headers:** `cors` (`^2.8.5`), `helmet` (`^7.0.0`)
+- **Logging:** `morgan` (`^1.10.0`) + Custom Structured Logger (`src/utils/logger.ts`)
+
+For full technical dependency matrices and API schemas, see [Report/api_dependencies.md](../Report/api_dependencies.md).
+
+---
+
+## API Endpoints Overview
+
+| Method | Endpoint | Description | Validation / Constraints |
+| :---: | :--- | :--- | :--- |
+| `POST` | `/api/scan` | Process barcode/QR scan for Entry/Exit | `studentId` string (2-50 chars, required) |
+| `GET` | `/api/seats` | Get seat visual grid pictograph data | None |
+| `GET` | `/api/students-inside` | List all students currently inside | None |
+| `GET` | `/api/scan-logs` | Retrieve recent activity audit logs | `limit` (optional integer, $1 \le \text{limit} \le 100$) |
+| `GET` | `/api/status` | Get total, occupied & available seats | None |
+| `GET` | `/api/student/:studentId` | Get student details by ID | `studentId` param required |
+| `POST` | `/api/reset` | Admin reset of library occupancy state | None |
+| `GET` | `/api/health` | Service health check | None |
+
+---
+
+## Standardized Response Envelopes
+
+### Success Response Format
+```json
+{
+  "success": true,
+  "message": "Library status retrieved successfully",
+  "data": {
+    "totalSeats": 100,
+    "occupiedSeats": 10,
+    "availableSeats": 90,
+    "occupancyRate": 10
+  },
+  "timestamp": "2026-08-24T22:15:00.000Z"
+}
+```
+
+### Error Response Format
+```json
+{
+  "success": false,
+  "error": "Request validation failed",
+  "code": "VALIDATION_ERROR",
+  "details": [
+    {
+      "field": "studentId",
+      "message": "Student ID is required"
+    }
+  ],
+  "timestamp": "2026-08-24T22:15:00.000Z"
+}
+```
+
+---
 
 ## Project Structure
 
@@ -19,151 +83,58 @@ A complete Node.js + TypeScript backend for a library management system with Exp
 backend/
 ├── src/
 │   ├── config/
-│   │   └── database.ts          # Database configuration and initialization
-│   ├── models/
-│   │   └── library.model.ts     # Data models and database operations
+│   │   └── database.ts         # Supabase client setup & connection validation
 │   ├── controllers/
-│   │   └── library.controller.ts # Request handlers
-│   ├── routes/
-│   │   └── library.routes.ts    # API route definitions
+│   │   └── library.controller.ts# Request controllers with error delegation
 │   ├── middleware/
-│   │   └── errorHandler.ts      # Error handling middleware
-│   └── server.ts                # Main server file
-├── .env.example                 # Environment variables template
-├── package.json                 # Dependencies and scripts
-├── tsconfig.json                # TypeScript configuration
-└── README.md                    # This file
+│   │   ├── errorHandler.ts     # Global error catching & 404 handler
+│   │   └── validate.ts         # express-validator request rules
+│   ├── models/
+│   │   └── library.model.ts    # Supabase queries & student access logic
+│   ├── routes/
+│   │   └── library.routes.ts   # Express route definitions with middlewares
+│   ├── types/
+│   │   └── library.types.ts    # TypeScript interface definitions
+│   ├── utils/
+│   │   ├── access_expiry.ts    # Student access expiry calculation
+│   │   ├── appError.ts         # Operational exception hierarchy
+│   │   ├── logger.ts           # Structured level logging utility
+│   │   └── responseHandler.ts  # Standardized response envelopes
+│   └── server.ts               # Server entrypoint & middleware mounting
+├── .env.example
+├── package.json
+├── tsconfig.json
+└── README.md
 ```
 
-## Setup Instructions
+---
+
+## Setup & Running Instructions
 
 ### 1. Install Dependencies
-
 ```bash
 cd backend
 npm install
 ```
 
 ### 2. Configure Environment Variables
-
 Copy `.env.example` to `.env`:
-
-```bash
-cp .env.example .env
-```
-
-Or create `.env` manually with:
-
-```
+```env
 PORT=3000
 NODE_ENV=development
-DB_PATH=./library.db
+SUPABASE_URL=https://your-supabase-url.supabase.co
+SUPABASE_SERVICE_KEY=your-supabase-service-key
 ```
 
-### 3. Run the Server
-
-**Development mode (with auto-reload):**
+### 3. Run Development Server
 ```bash
 npm run dev
 ```
 
-**Build TypeScript:**
+### 4. Build TypeScript
 ```bash
 npm run build
 ```
 
-**Production mode:**
-```bash
-npm start
-```
-
-The server will start on `http://localhost:3000`
-
-## API Endpoints
-
-### Books
-
-- `GET /api/books` - Get all books
-- `GET /api/books/:id` - Get book by ID
-- `POST /api/books` - Create a new book
-- `PUT /api/books/:id` - Update a book
-- `DELETE /api/books/:id` - Delete a book
-
-### Members
-
-- `GET /api/members` - Get all members
-- `GET /api/members/:id` - Get member by ID
-- `POST /api/members` - Create a new member
-- `PUT /api/members/:id` - Update a member
-- `DELETE /api/members/:id` - Delete a member
-
-### Health Check
-
-- `GET /` - API information
-- `GET /health` - Health check endpoint
-
-## Example API Requests
-
-### Create a Book
-
-```bash
-POST http://localhost:3000/api/books
-Content-Type: application/json
-
-{
-  "title": "The Great Gatsby",
-  "author": "F. Scott Fitzgerald",
-  "isbn": "978-0-7432-7356-5",
-  "category": "Fiction",
-  "published_year": 1925,
-  "total_copies": 5,
-  "available_copies": 5
-}
-```
-
-### Create a Member
-
-```bash
-POST http://localhost:3000/api/members
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "phone": "+1234567890",
-  "address": "123 Main St, City, State"
-}
-```
-
-## Database Schema
-
-The database automatically creates three tables:
-
-1. **books** - Stores book information
-2. **members** - Stores member information
-3. **transactions** - Stores borrow/return transactions (ready for future implementation)
-
-## Technologies Used
-
-- **Express.js** - Web framework
-- **TypeScript** - Type-safe JavaScript
-- **better-sqlite3** - SQLite database driver
-- **CORS** - Cross-Origin Resource Sharing
-- **dotenv** - Environment variable management
-- **nodemon** - Development auto-reload
-
-## Development
-
-- The database file (`library.db`) will be created automatically on first run
-- All TypeScript files are in the `src/` directory
-- Compiled JavaScript files will be in the `dist/` directory
-- Use `npm run dev` for development with auto-reload
-- Use `npm run build` to compile TypeScript before production
-
-## Notes
-
-- The database is initialized automatically when the server starts
-- Foreign keys are enabled for referential integrity
-- All timestamps are automatically managed
-- Input validation is handled in controllers
-- Error handling middleware catches all errors
+---
+*Documentation updated August 24, 2026.*
